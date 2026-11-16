@@ -118,11 +118,22 @@ function main() {
   }
   const bigEl = $('big'), bubble = $('bubble'), sukiEl = $('suki'), spEl = $('sp'), linesEl = $('lines');
   function big(text, cls) { bigEl.className = 'stroke'; bigEl.textContent = text; void bigEl.offsetWidth; bigEl.className = 'stroke go ' + (cls || ''); }
+  /* ふきだし。顔にかぶらない所に出す(ふだんは下。顔が下に来たら上へよける)。だれのセリフか 名前の札つき */
+  function placeBubble() {
+    const lowY = H * (S.room ? 0.93 : 0.84), topY = H * 0.38, bh = S.bubH || 90, r = S.headScr[2], ht = S.headScr[1] - r * 1.35, hb = S.headScr[1] + r * 1.3;
+    if (!S.room) {
+      const hitLow = hb > lowY - bh - 12 && ht < lowY, hitTop = ht < topY + 12 && hb > topY - bh;
+      if (S.bubLow && hitLow && !hitTop) S.bubLow = false; else if (!S.bubLow && hitTop && !hitLow) S.bubLow = true;
+    } else S.bubLow = true;
+    bubble.classList.toggle('low', S.bubLow && !S.room);
+    bubble.style.left = (W / 2) + 'px'; bubble.style.top = (S.bubLow ? lowY : topY) + 'px';
+  }
   function say(text, kind, sec) {
     if (S.state !== 'play' && S.state !== 'ready') return;
-    bubble.textContent = text; bubble.className = 'on ' + (kind || 'taunt'); S.sayT = sec || 1.9;
-    S.bub[0] = clamp(S.headScr[0], W * 0.46, W * 0.54); S.bub[1] = S.room ? H * 0.86 : Math.max(H * 0.36, S.headScr[1] - S.headScr[2] * 1.6 - 20);
-    void bubble.offsetWidth; bubble.classList.add('in');
+    const d = S.R.def, who = d.room || d.boss ? 'イヤミ田さん' : d.name.split(' ').pop();
+    bubble.textContent = ''; const tag = document.createElement('i'); tag.textContent = who; bubble.appendChild(tag); bubble.appendChild(document.createTextNode(text));
+    bubble.className = 'on ' + (kind || 'taunt'); S.sayT = sec || 1.9; S.bubLow = true; S.bubH = bubble.offsetHeight + 24;
+    placeBubble(); void bubble.offsetWidth; bubble.classList.add('in');
   }
   function vib(p) { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {} }
   const FX = {
@@ -636,7 +647,7 @@ function main() {
         const gq = Math.round(clamp(S.gauge / S.R.def.tough, 0, 1) * 100) + (S.ai.mode === 'down' ? 200 : 0); if (gq !== hudG) { hudG = gq; $('gauge').style.transform = 'scaleX(' + (gq >= 200 ? 1 : gq / 100) + ')'; $('gaugeWrap').classList.toggle('full', gq > 85); }
       }
       if (S.sayT > 0) { S.sayT -= rdt; if (S.sayT <= 0) bubble.className = '';
-        else { if (!S.room) { S.bub[0] += (clamp(S.headScr[0], W * 0.46, W * 0.54) - S.bub[0]) * Math.min(1, rdt * 2.5); S.bub[1] += (Math.max(H * 0.36, S.headScr[1] - S.headScr[2] * 1.6 - 20) - S.bub[1]) * Math.min(1, rdt * 2.5); } bubble.style.left = S.bub[0] + 'px'; bubble.style.top = S.bub[1] + 'px'; } }
+        else placeBubble(); }
       if (S.ai && S.ai.open) { sukiEl.style.left = clamp(S.headScr[0], 80, W - 80) + 'px'; sukiEl.style.top = Math.max(H * 0.2, S.headScr[1] - S.headScr[2] * 1.2) + 'px'; }
       renderer.render(scene, camera);
     } catch (e) { console.error(e); }
