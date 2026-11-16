@@ -3,7 +3,7 @@
    ゲームは index.html と js/ と vendor/three/(立体の部品)でできている。それと アイコン類を覚えておく。
    ゲームを直しただけなら VERSION は そのままでいい(開くたびに、まずネットで最新を取りにいくので)。
    FILES(覚えるファイル)を変えたときだけ VERSION を 1つ上げる(古い覚えを 一斉に捨てる)。 */
-const VERSION = 'nagurare-v2';
+const VERSION = 'nagurare-v3';
 const FILES = ['./', 'index.html', 'install.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'maskable-512.png', 'apple-touch-icon.png',
   'js/game.js', 'js/chars.js', 'js/stages.js', 'js/kit.js', 'js/sfx.js', 'vendor/three/three.module.js', 'vendor/three/three.core.js',
   'shots/1.jpg', 'shots/2.jpg', 'shots/3.jpg', 'shots/4.jpg'];

@@ -43,9 +43,12 @@
   #hits small { font-size: .36em; margin-left: 4px; color: #fff; text-shadow: none; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; }
   #hits.bump { animation: bump .16s ease-out; }
   @keyframes bump { 0% { transform: scale(1.32) rotate(-3deg); } 100% { transform: scale(1); } }
-  #combo { text-align: center; font-weight: 900; font-size: clamp(20px, 6.2vw, 34px); color: #fff; height: 1.3em; opacity: 0; transform-origin: center; }
+  #comboWrap { font-size: clamp(26px, 8vw, 44px); height: 2.1em; display: flex; align-items: flex-start; justify-content: center; }
+  #combo { text-align: center; font-weight: 900; color: #fff; opacity: 0; transform-origin: center top; line-height: 1; white-space: nowrap; }
   #combo.on { opacity: 1; } #combo.bump { animation: bump .18s ease-out; }
-  #combo b { color: #ff7ad1; font-size: 1.35em; }
+  #combo { font-size: 1em; } #combo span { font-size: .68em; }
+  #combo b { color: #ff7ad1; font-size: 1.35em; margin-right: .06em; }
+  #combo.c1 b { color: #ffe14a; } #combo.c2 b { color: #ff9a3b; } #combo.c3 b { color: #ff5a5a; } #combo.c4 b { color: #ff2b2b; text-shadow: 0 0 18px #ffe14a; }
   #foe { position: absolute; left: 10px; right: 10px; bottom: calc(env(safe-area-inset-bottom) + 8px); display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 13px; }
   #foeName { flex: none; max-width: 46%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--ink); padding: 4px 10px; border-radius: 999px; }
   #gaugeWrap { flex: 1; height: 16px; border: 3px solid var(--ink); border-radius: 999px; background: rgba(20,12,42,.75); overflow: hidden; position: relative; }
@@ -65,10 +68,33 @@
   #big.go { animation: big .95s cubic-bezier(.2, 1.5, .4, 1) forwards; }
   #big.red { color: var(--red); -webkit-text-stroke-color: #fff; } #big.yel { color: var(--yel); }
   @keyframes big { 0% { opacity: 0; transform: scale(.2) rotate(-8deg); } 18% { opacity: 1; transform: scale(1.18) rotate(-4deg); } 30% { transform: scale(1) rotate(-4deg); } 80% { opacity: 1; transform: scale(1.04) rotate(-4deg); } 100% { opacity: 0; transform: scale(1.3) rotate(-4deg); } }
-  #bubble { position: fixed; pointer-events: none; transform: translate(-50%, -100%); background: #fff; color: var(--ink); font-weight: 900; font-size: clamp(14px, 4.2vw, 19px); padding: 8px 14px; border: 3px solid var(--ink); border-radius: 18px; max-width: 78vw; text-align: center; box-shadow: 0 4px 0 var(--ink); opacity: 0; transition: opacity .12s; line-height: 1.35; }
-  #bubble::after { content: ""; position: absolute; left: 50%; bottom: -13px; margin-left: -9px; border: 9px solid transparent; border-top: 12px solid var(--ink); border-bottom: 0; }
-  #bubble.on { opacity: 1; }
-  #bubble.boss { background: #f3e2ff; }
+  #bubble { position: fixed; pointer-events: none; transform: translate(-50%, -100%) scale(.5); background: #fff; color: var(--ink); font-weight: 900; font-size: clamp(23px, 6.8vw, 38px); line-height: 1.25;
+    padding: 14px 22px; border: 5px solid var(--ink); border-radius: 30px; width: max-content; max-width: 88vw; text-align: center; box-shadow: 0 7px 0 var(--ink); opacity: 0; transition: transform .16s cubic-bezier(.2, 1.9, .4, 1), opacity .1s; z-index: 3; }
+  #bubble::after { content: ""; position: absolute; left: 50%; bottom: -19px; margin-left: -12px; border: 12px solid transparent; border-top: 17px solid var(--ink); border-bottom: 0; }
+  #bubble.on.in { opacity: 1; transform: translate(-50%, -100%) scale(1) rotate(-2deg); }
+  #bubble.ouch { background: #ffe14a; border-radius: 46% 54% 50% 50% / 62% 58% 42% 38%; padding: 20px 28px; }
+  #bubble.ouch.on.in { transform: translate(-50%, -100%) scale(1) rotate(3deg); }
+  #bubble.cute { background: #ffd9ec; border-color: #c2185b; color: #8a0f45; box-shadow: 0 7px 0 #c2185b; border-radius: 40px; }
+  #bubble.cute::after { display: none; } #bubble.cute::before { content: "♡"; position: absolute; right: 14px; top: 4px; font-size: .7em; }
+  #suki { position: fixed; pointer-events: none; transform: translate(-50%, -100%); font-weight: 900; font-size: clamp(22px, 7vw, 36px); color: #fff6b0; opacity: 0; white-space: nowrap; text-shadow: 0 0 14px #ff9a1a, 0 0 4px #ff9a1a; z-index: 2; }
+  #suki.on { opacity: 1; animation: suki .28s ease-in-out infinite alternate; }
+  @keyframes suki { 0% { transform: translate(-50%, -100%) scale(.9); } 100% { transform: translate(-50%, -110%) scale(1.15); } }
+  #lines { position: fixed; inset: -20%; pointer-events: none; opacity: 0; background: repeating-conic-gradient(from 0deg, rgba(255,255,255,0) 0 7deg, rgba(255,255,255,.55) 7deg 8.2deg);
+    -webkit-mask: radial-gradient(circle, transparent 30%, #000 62%); mask: radial-gradient(circle, transparent 30%, #000 62%); }
+  #lines.go { animation: lines .16s ease-out; }
+  @keyframes lines { 0% { opacity: .9; transform: scale(.9) rotate(0deg); } 100% { opacity: 0; transform: scale(1.15) rotate(4deg); } }
+  #sp { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .12s; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 24vh; text-align: center; z-index: 4;
+    background: radial-gradient(circle at 50% 42%, rgba(0,0,0,0) 26%, rgba(20,0,30,.82) 70%); }
+  #sp.on { opacity: 1; }
+  #sp::before { content: ""; position: absolute; inset: -30%; background: repeating-conic-gradient(from 0deg, rgba(255,225,74,0) 0 5deg, rgba(255,225,74,.5) 5deg 6.5deg); -webkit-mask: radial-gradient(circle, transparent 24%, #000 58%); mask: radial-gradient(circle, transparent 24%, #000 58%); animation: spin 1.2s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #sp div { position: relative; font-weight: 900; }
+  #spT { font-size: clamp(40px, 14vw, 84px); color: var(--red); -webkit-text-stroke-color: #fff; animation: bump .3s ease-out infinite alternate; }
+  #spName { font-size: clamp(24px, 7.6vw, 44px); color: var(--yel); line-height: 1.2; padding: 0 10px; }
+  #spSub { font-size: clamp(20px, 6vw, 32px); color: #fff; margin-top: 6px; animation: bump .2s ease-out infinite alternate; }
+  .pop.dmg { color: #ff7ad1; font-size: clamp(26px, 8.4vw, 46px); animation-duration: 1.1s; z-index: 2; }
+  .pop.crit { color: #fff; font-size: clamp(30px, 9.5vw, 52px); -webkit-text-stroke-color: var(--red); animation-duration: .8s; }
+  .pop.gold { color: #ffb21a; }
 
   /* ---- 重なる画面 ---- */
   .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -84,6 +110,18 @@
   .card img { width: 100%; aspect-ratio: 1 / 0.82; object-fit: cover; display: block; background: #ccd; border-bottom: 3px solid var(--ink); }
   .card .nm { font-size: 14px; font-weight: 900; padding: 6px 8px 0; line-height: 1.25; }
   .card .kt { font-size: 10.5px; font-weight: 700; padding: 2px 8px 0; opacity: .7; line-height: 1.35; min-height: 2.7em; }
+  .card .row { flex-wrap: wrap; }
+  .card .cr { font-size: 10.5px; font-weight: 800; padding: 3px 8px 0; line-height: 1.35; color: #b71c1c; }
+  .card .cr b { background: #b71c1c; color: #fff; border-radius: 4px; padding: 0 4px; margin-right: 4px; font-size: 9.5px; }
+  .card.boss .cr { color: #ffb0b0; font-size: 12px; }
+  .done { position: absolute; left: 6px; bottom: auto; top: 34px; background: #2e7d32; color: #fff; font-size: 10px; font-weight: 900; padding: 1px 7px; border-radius: 999px; border: 2px solid var(--ink); transform: rotate(-8deg); }
+  .card.boss .done { top: auto; bottom: 6px; }
+  .card.secret { grid-column: 1 / -1; flex-direction: row; align-items: center; background: #ffe9f4; border: 3px dashed #c2185b; box-shadow: 0 5px 0 #c2185b; padding: 0; color: #8a0f45; }
+  .card.secret .q { width: 34%; flex: none; text-align: center; font-size: clamp(30px, 10vw, 48px); font-weight: 900; color: #c2185b; letter-spacing: -2px; padding: 18px 0; animation: bump .6s ease-in-out infinite alternate; }
+  .card.secret img { width: 34%; aspect-ratio: 1 / 0.95; border-bottom: 0; border-right: 3px dashed #c2185b; }
+  .card.secret .txt { flex: 1; padding: 8px 6px 8px 2px; } .card.secret .nm { font-size: 16px; } .card.secret .kt { opacity: .9; font-size: 12px; min-height: 0; }
+  .card.secret.open { background: linear-gradient(120deg, #ffd9ec, #fff3b0); border-style: solid; }
+  .card.secret.no { animation: shake .12s linear 3; }
   .card .row { display: flex; justify-content: space-between; align-items: center; padding: 3px 8px 0; font-size: 11px; font-weight: 900; }
   .card .spd { color: #ff7a00; letter-spacing: -1px; } .card .spd i { color: #d6d6e0; font-style: normal; }
   .card .best { color: #c2185b; }
@@ -103,6 +141,15 @@
   #resNew { color: #ff7ad1; font-weight: 900; font-size: 18px; margin: 0; animation: bump .5s ease-out infinite alternate; }
   #resBye { background: #fff; color: var(--ink); border: 3px solid var(--ink); border-radius: 16px; padding: 10px 14px; font-weight: 800; font-size: 14px; max-width: 420px; box-shadow: 0 4px 0 var(--ink); display: flex; gap: 10px; align-items: center; text-align: left; }
   #resBye img { width: 58px; height: 58px; border-radius: 50%; border: 3px solid var(--ink); object-fit: cover; flex: none; }
+  #warn { background: rgba(255, 214, 234, .96); color: #5a0f35; z-index: 6; }
+  #warn .box { background: #fff; border: 5px solid #c2185b; border-radius: 30px; box-shadow: 0 8px 0 #c2185b; padding: 20px 18px 22px; max-width: 460px; width: 100%; }
+  #warn .ttl { font-size: clamp(30px, 9.5vw, 46px); font-weight: 900; color: #e53935; margin: 0 0 8px; }
+  #warn .big1 { font-size: clamp(22px, 6.6vw, 32px); font-weight: 900; line-height: 1.45; margin: 0; }
+  #warn .big1 em { font-style: normal; color: #e53935; background: linear-gradient(transparent 62%, #ffe14a 62%); }
+  #warn .mid1 { font-size: clamp(16px, 4.8vw, 21px); font-weight: 800; line-height: 1.7; margin: 12px 0 0; }
+  #warn .emo { font-size: 46px; line-height: 1.1; margin: 8px 0 2px; }
+  #warn .pill { background: #ff7ab0; border-color: #8a0f45; box-shadow: 0 5px 0 #8a0f45; color: #fff; margin-top: 16px; }
+  #resUnlock { margin: 0; font-weight: 900; font-size: 14px; color: #ffb0d8; }
   #ready { background: none; pointer-events: none; }
   #ready .who { font-size: clamp(22px, 7vw, 36px); font-weight: 900; } #ready .rd { font-size: clamp(46px, 15vw, 90px); font-weight: 900; color: var(--yel); }
   #hint { position: fixed; left: 0; right: 0; bottom: 20%; text-align: center; font-weight: 900; font-size: 17px; pointer-events: none; animation: bump .5s ease-out infinite alternate; }
@@ -118,20 +165,32 @@
     <button id="btnMute" class="ibtn" type="button" aria-label="音">🔊</button>
   </div>
   <div id="hits" class="stroke">0<small>発</small></div>
-  <div id="combo" class="stroke"></div>
+  <div id="comboWrap"><div id="combo" class="stroke"></div></div>
   <div id="foe"><span id="foeName"></span><div id="gaugeWrap"><div id="gauge"></div></div></div>
 </div>
+<div id="lines"></div>
 <div id="pops"></div>
+<div id="suki">✨ スキあり! 顔をねらえ ✨</div>
 <div id="bubble"></div>
+<div id="sp"><div id="spT" class="stroke">必殺!!</div><div id="spName" class="stroke"></div><div id="spSub" class="stroke"></div></div>
 <div id="big" class="stroke"></div>
 <div id="hint" class="stroke hidden">相手をタップして殴れ!</div>
 
 <div id="select" class="overlay">
   <h1 class="logo stroke">殴られ屋</h1>
   <p class="sub">1分間、殴って殴って殴りまくれ!</p>
-  <p class="note">相手は「殴られ屋」。よけるだけで、やり返してきません。<br>だれを殴る? 好きな相手をえらんでね。</p>
+  <p class="note">相手は、嫌なやつばかりの「殴られ屋」。よけるだけで、やり返してきません。<br>だれを殴る? 好きな相手をえらんでね。</p>
   <div id="grid"></div>
   <p class="note" style="margin-top:14px">※ 登場するのは全員、殴られるのが仕事のプロ(作り話)です。本物の人は殴らないでね。</p>
+</div>
+<div id="warn" class="overlay mid hidden">
+  <div class="box">
+    <p class="ttl">⚠ ちゅうい ⚠</p>
+    <p class="big1"><em>本物の人間</em>だけは、<br><em>ぜったいに</em><br>殴らないでください。</p>
+    <p class="emo">🙅‍♀️💕👵</p>
+    <p class="mid1">これは パロディ(作り話)です。<br>お年寄りは 大切にしてね ♡</p>
+    <button id="btnWarn" class="pill" type="button">はーい!わかった</button>
+  </div>
 </div>
 <div id="ready" class="overlay mid hidden"><div class="who stroke" id="readyWho"></div><div class="rd stroke" id="readyTxt">READY…</div></div>
 <div id="pause" class="overlay mid hidden">
@@ -144,6 +203,7 @@
   <p id="resHits" class="stroke">0<small>発</small></p>
   <p id="resRank" class="stroke"></p>
   <p id="resStats"></p>
+  <p id="resUnlock"></p>
   <div id="resBye"><img id="resFace" alt=""><span id="resByeTxt"></span></div>
   <button id="btnAgain" class="pill" type="button">もういっかい殴る</button>
   <button id="btnBack" class="pill w" type="button">相手をえらぶ</button>
@@ -187,7 +247,7 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
 <script>
   // はじめの画面(Google Play 風: インストール / このまま遊ぶ)。install.js が出す。ホーム画面から開いたときは出ない
   window.INSTALL_GATE = { id: 'nagurare', name: '殴られ屋', icon: 'icon-192.png', tagline: '1分間、殴りまくる スッキリ3Dゲーム', desc: '1分間、とにかく殴りまくれ!よけるのがうまい10人の「殴られ屋」を、タップでボコボコにするスッキリ3Dゲーム。',
-    points: ['相手は10人。よけ方も、倒れ方も、ぜんぶ違う', 'タップするだけ。グローブが飛び出して気持ちいい', 'ボスは、目しか見えない工場の女帝'], shots: ['shots/1.jpg', 'shots/2.jpg', 'shots/3.jpg', 'shots/4.jpg'], badges: ['無料', '広告なし', '登録なし'] };
+    points: ['相手は嫌なやつ10人。動きも、倒れ方も、ぜんぶ違う', '殴るほど顔がはれて、たんこぶだらけに', '全員ダウンさせると ひみつの部屋がひらく'], shots: ['shots/1.jpg', 'shots/2.jpg', 'shots/3.jpg', 'shots/4.jpg'], badges: ['無料', '広告なし', '登録なし'] };
 </script>
 <script src="install.js"></script>
 </body>
