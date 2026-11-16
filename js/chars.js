@@ -85,17 +85,19 @@ function vein(x, vx, vy) {   // 怒りマーク
 function bandage(x, bx, by, r, w) { x.save(); x.translate(bx, by); x.rotate(r); x.fillStyle = '#f3dfb8'; x.fillRect(-w / 2, -6, w, 12); x.fillStyle = 'rgba(150,110,70,.6)'; for (let i = -1; i <= 1; i++) x.fillRect(i * 5 - 1, -2, 2, 2); x.restore(); }
 /* 殴られた分だけ顔が変わる(下に描く分・上に描く分) */
 function dmgUnder(x, f, lv, cx, ey, ex) {
-  if (lv >= 6) { x.fillStyle = 'rgba(255,70,70,.16)'; x.fillRect(0, 0, 512, 256); }
-  if (lv >= 2) { const g = x.createRadialGradient(cx - ex, ey, 6, cx - ex, ey, 36); g.addColorStop(0, 'rgba(80,35,125,.9)'); g.addColorStop(1, 'rgba(80,35,125,0)'); x.fillStyle = g; x.fillRect(cx - ex - 38, ey - 38, 76, 76); }
-  if (lv >= 1 && !f.masked) { x.fillStyle = 'rgba(255,55,55,.6)'; x.beginPath(); x.ellipse(cx + ex + 26, ey + 40, 25, 17, 0, 0, 7); x.fill(); }
-  if (lv >= 4 && !f.masked) { x.fillStyle = 'rgba(160,60,140,.5)'; x.beginPath(); x.ellipse(cx - ex - 28, ey + 44, 22, 15, 0, 0, 7); x.fill(); }
-  if (lv >= 5 && !f.capped) { x.fillStyle = 'rgba(120,50,140,.45)'; x.beginPath(); x.ellipse(cx - 30, ey - 50, 20, 10, 0.2, 0, 7); x.fill(); }
+  const g = f.gentle;   // 女の人・お年寄りは 青タンなし(ぷっくり腫れるだけ。かわいく)
+  if (lv >= 6) { x.fillStyle = 'rgba(255,90,90,.14)'; x.fillRect(0, 0, 512, 256); }
+  if (lv >= 2 && !g) { const gr = x.createRadialGradient(cx - ex, ey, 6, cx - ex, ey, 36); gr.addColorStop(0, 'rgba(80,35,125,.85)'); gr.addColorStop(1, 'rgba(80,35,125,0)'); x.fillStyle = gr; x.fillRect(cx - ex - 38, ey - 38, 76, 76); }
+  if (lv >= 1 && !f.masked) { x.fillStyle = 'rgba(255,80,95,.55)'; x.beginPath(); x.ellipse(cx + ex + 26, ey + 40, 25, 17, 0, 0, 7); x.fill(); }
+  if (lv >= 2 && g && !f.masked) { x.fillStyle = 'rgba(255,80,95,.5)'; x.beginPath(); x.ellipse(cx - ex - 26, ey + 40, 24, 16, 0, 0, 7); x.fill(); }
+  if (lv >= 4 && !f.masked) { x.fillStyle = g ? 'rgba(255,70,90,.4)' : 'rgba(160,60,140,.5)'; x.beginPath(); x.ellipse(cx - ex - 28, ey + 44, 22, 15, 0, 0, 7); x.fill(); }
+  if (lv >= 5 && !f.capped && !g) { x.fillStyle = 'rgba(120,50,140,.45)'; x.beginPath(); x.ellipse(cx - 30, ey - 50, 20, 10, 0.2, 0, 7); x.fill(); }
 }
 function dmgOver(x, f, lv, cx, ey, ex, my, expr) {
   const puff = function (px, full) {
-    const g = x.createRadialGradient(px, ey - 4, 3, px, ey, 28); g.addColorStop(0, '#b97aa6'); g.addColorStop(1, f.lidCol || f.skin);
+    const g = x.createRadialGradient(px, ey - 4, 3, px, ey, 28); g.addColorStop(0, f.gentle ? '#f6aeb0' : '#b97aa6'); g.addColorStop(1, f.gentle ? f.skin : (f.lidCol || f.skin));
     x.fillStyle = g; x.beginPath(); if (full) x.ellipse(px, ey, 26, 20, 0, 0, 7); else x.ellipse(px, ey - 9, 25, 12, 0, 0, 7); x.fill();
-    x.strokeStyle = 'rgba(60,20,40,.85)'; x.lineWidth = 3.5; x.lineCap = 'round'; x.beginPath();
+    x.strokeStyle = f.gentle ? 'rgba(120,50,50,.8)' : 'rgba(60,20,40,.85)'; x.lineWidth = 3.5; x.lineCap = 'round'; x.beginPath();
     if (full) { x.moveTo(px - 15, ey + 6); x.quadraticCurveTo(px, ey + 12, px + 15, ey + 5); } else { x.moveTo(px - 20, ey + 1); x.quadraticCurveTo(px, ey + 5, px + 20, ey); }
     x.stroke();
   };
@@ -185,52 +187,57 @@ export function buildChar(def) {
   // はれる所(ほっぺ・まぶた・たんこぶ)。はじめは見えない
   const cheekCol = def.cheekCol || new THREE.Color(skin).lerp(new THREE.Color(0xff5a5a), 0.45).getHex();
   R.cheeks = [-1, 1].map(function (s) { const m = add(R.hc, G.sph, cheekCol, [s * hr * 0.58, -hr * 0.34, hr * 0.6], 0.001); m.visible = false; return m; });
-  R.lids = [-1, 1].map(function (s) { const m = add(R.hc, G.sph, def.lidCol3 || 0xb97aa6, [s * hr * 0.4, hr * 0.13, hr * 0.86], 0.001); m.visible = false; return m; });
-  R.bumps = [];
-  [[-0.45, 0.92, 0.3], [0.5, 0.85, 0.1], [0.05, 1.02, -0.15], [-0.45, 1.36, 0.3]].forEach(function (p, i) {
-    const b = grp(R.hc, p[0] * hr, p[1] * hr, p[2] * hr), k = i === 3 ? 0.62 : 1; b.scale.setScalar(0.001); b.visible = false;
-    add(b, G.sph, 0xff7b6b, [0, 0, 0], [hr * 0.3 * k, hr * 0.36 * k, hr * 0.3 * k]);
-    add(b, G.box, 0xfff6e0, [0, hr * 0.3 * k, 0], [hr * 0.36 * k, hr * 0.03, hr * 0.1 * k]); add(b, G.box, 0xfff6e0, [0, hr * 0.3 * k, 0], [hr * 0.1 * k, hr * 0.03, hr * 0.36 * k]);
-    R.bumps.push(b);
-  });
-  R.tower = [];
-  R.swT = [0, 0, 0, 0, 0, 0, 0, 0]; R.swC = [0, 0, 0, 0, 0, 0, 0, 0];   // 右ほお・左ほお・右まぶた・左まぶた・こぶ1〜4
+  R.lids = [-1, 1].map(function (s) { const m = add(R.hc, G.sph, def.lidCol3 || (def.face.gentle ? 0xf2a2a2 : 0xb97aa6), [s * hr * 0.4, hr * 0.13, hr * 0.86], 0.001); m.visible = false; return m; });
+  R.bumpG = []; R.bumpTier = [0, 0, 0]; R.lastTier = 0; R.swT = [0, 0]; R.lidT = [0, 0]; R.swC = [0, 0, 0, 0]; R.puff = 0; R.puffC = 0;
   def.dress(R, { T: T, L: L, hr: hr, w: w, skin: skin });
   R.root.traverse(function (m) { if (m.isMesh) m.frustumCulled = false; });
   return R;
 }
-/* 顔のはれ具合を変える(lv 0〜6)。say = 上がった瞬間(お知らせを出す) */
-export const DMG_TEXT = ['', 'ほっぺ まっか!', '青タン できた!', '目が はれた!', 'たんこぶ 2つめ!', 'ボッコボコ!', '顔面 ほうかい!!'];
+/* 顔の絵の段階(lv 0〜6)。say = 上がった瞬間(お知らせを出す)。血は出さない */
+const DMG_TEXT = ['', 'ほっぺ ぷくっ!', '青タン できた!', '目が はれた!', 'くちびる たらこ!', 'ボッコボコ!', 'もう 顔が げんかい!!'];
+const DMG_TEXT_G = ['', 'ほっぺ ぷくっ!', 'ほっぺ ぱんぱん!', '目が はれた!', 'くちびる たらこ!', 'おかお まんまる!', 'もう かんべんして〜!!'];
 export function setDamage(R, lv, fx, say) {
   R.lv = lv;
   EXPRS.forEach(function (e) { const old = R.tex[e]; R.tex[e] = faceTex(R.def.face, e, lv, R.def.hires); old.dispose(); });
   R.faceMat.map = R.tex[R.curExpr] || R.tex.idle;
-  R.swT = [lv >= 1 ? 0.2 + 0.05 * lv : 0, lv >= 2 ? 0.14 + 0.05 * lv : 0, lv >= 3 ? 0.27 : 0, lv >= 6 ? 0.27 : lv >= 4 ? 0.16 : 0, lv >= 2 ? 1 : 0, lv >= 4 ? 1 : 0, lv >= 5 ? 1 : 0, lv >= 6 ? 1 : 0];
-  if (R.def.face.masked) { R.swT[0] *= 0.6; R.swT[1] *= 0.6; }
-  if (lv === 0) { R.tower.forEach(function (m) { R.hc.remove(m); }); R.tower = []; }
-  let t = DMG_TEXT[lv];
+  R.lidT = [lv >= 3 ? 0.27 : 0, lv >= 6 ? 0.27 : lv >= 4 ? 0.16 : 0];
+  let t = (R.def.face.gentle ? DMG_TEXT_G : DMG_TEXT)[lv];
   if (R.def.dmg) { const r = R.def.dmg(R, lv, fx, say); if (r) t = r; }
   if (say && fx && t) fx.dmg(t, lv);
 }
-/* たんこぶの塔を1段のばす(ひみつの部屋用) */
-export function growTower(R) {
-  const hr = R.hr, n = R.tower.length; if (n >= 7) return false;
-  const k = 0.55 * Math.pow(0.9, n), y = hr * (1.36 + 0.26 + n * 0.24);
-  const g = grp(R.hc, -0.45 * hr + Math.sin(n * 1.7) * hr * 0.05, y, 0.3 * hr);
-  add(g, G.sph, n % 2 ? 0xff9a8a : 0xff7b6b, [0, 0, 0], [hr * 0.3 * k, hr * 0.34 * k, hr * 0.3 * k]);
-  g.traverse(function (m) { m.frustumCulled = false; }); g.scale.setScalar(0.01); g.userData.k = 0; R.tower.push(g); return true;
+/* ほっぺと顔のふくらみ(p = 0〜1。殴られた数に合わせて 少しずつ大きく) */
+export function setSwell(R, p) {
+  const m = R.def.face.masked ? 0.6 : 1; p = Math.min(1.15, p);
+  R.swT[0] = p > 0.08 ? (0.13 + 0.39 * p) * m : 0; R.swT[1] = p > 0.22 ? (0.06 + 0.41 * p) * m : 0; R.puff = p;
+}
+/* たんこぶ。昔のアニメのように、たんこぶの上に たんこぶが 積み上がる(n = 全部の数) */
+const BUMP_AT = [[-0.45, 0.9, 0.3], [0.5, 0.84, 0.1], [0.05, 1.0, -0.2]], BUMP_SEQ = [0, 1, 0, 2, 1, 0, 2, 1, 0, 2, 1, 0, 0, 1, 2, 0, 1, 0];
+export const BUMP_MAX = BUMP_SEQ.length;
+export function setBumps(R, n) {
+  const hr = R.hr;
+  if (n < R.bumpG.length) { R.bumpG.forEach(function (g) { R.hc.remove(g); }); R.bumpG = []; R.bumpTier = [0, 0, 0]; }
+  while (R.bumpG.length < n && R.bumpG.length < BUMP_SEQ.length) {
+    const w = BUMP_SEQ[R.bumpG.length], i = R.bumpTier[w]++, b = BUMP_AT[w], k = Math.pow(0.9, i);
+    let y = b[1]; for (let j = 0; j < i; j++) y += 0.3 * (Math.pow(0.9, j) + Math.pow(0.9, j + 1)) * 0.82;
+    const g = grp(R.hc, (b[0] + (i ? (i % 2 ? 0.05 : -0.04) : 0)) * hr, y * hr, b[2] * hr);
+    add(g, G.sph, i % 2 ? 0xffa69c : 0xff8a80, [0, 0, 0], [hr * 0.3 * k, hr * 0.34 * k, hr * 0.3 * k]);
+    add(g, G.sph, 0xffffff, [-hr * 0.1 * k, hr * 0.17 * k, hr * 0.22 * k], hr * 0.05 * k);
+    add(g, G.box, 0xfff6e0, [0, hr * 0.33 * k, 0], [hr * 0.3 * k, hr * 0.025, hr * 0.09 * k]); add(g, G.box, 0xfff6e0, [0, hr * 0.33 * k, 0], [hr * 0.09 * k, hr * 0.025, hr * 0.3 * k]);
+    g.traverse(function (m) { m.frustumCulled = false; }); g.scale.setScalar(0.01); g.userData.k = 0; R.bumpG.push(g); R.lastTier = i + 1;
+  }
+  return R.bumpG.length;
 }
 export function animSwell(R, dt) {
   const hr = R.hr;
-  for (let i = 0; i < 8; i++) {
-    const c = R.swC[i], t = R.swT[i]; if (c === t) continue;
+  for (let i = 0; i < 4; i++) {
+    const c = R.swC[i], t = i < 2 ? R.swT[i] : R.lidT[i - 2]; if (c === t) continue;
     const n = Math.abs(t - c) < 0.004 ? t : c + (t - c) * Math.min(1, dt * 9); R.swC[i] = n;
     const pop = 1 + Math.max(0, t - n) * 1.5;
     if (i < 2) { const m = R.cheeks[i === 0 ? 1 : 0]; m.visible = n > 0.01; m.scale.set(hr * n * pop, hr * n * 0.85 * pop, hr * n * 0.8 * pop); }
-    else if (i < 4) { const m = R.lids[i === 2 ? 1 : 0]; m.visible = n > 0.01; m.scale.set(hr * n * 1.15, hr * n * 0.85, hr * n * 0.6); }
-    else { const b = R.bumps[i - 4]; b.visible = n > 0.01; b.scale.setScalar(Math.max(0.001, n * pop)); }
+    else { const m = R.lids[i === 2 ? 1 : 0]; m.visible = n > 0.01; m.scale.set(hr * n * 1.15, hr * n * 0.85, hr * n * 0.6); }
   }
-  for (let i = 0; i < R.tower.length; i++) { const g = R.tower[i]; if (g.userData.k < 1) { g.userData.k = Math.min(1, g.userData.k + dt * 5); g.scale.setScalar(ease.out(g.userData.k) * (1 + Math.sin(g.userData.k * PI) * 0.7)); } }
+  R.puffC += ((R.puff || 0) - R.puffC) * Math.min(1, dt * 4);
+  for (let i = 0; i < R.bumpG.length; i++) { const g = R.bumpG[i]; if (g.userData.k < 1) { g.userData.k = Math.min(1, g.userData.k + dt * 4.5); g.scale.setScalar(ease.out(g.userData.k) * (1 + Math.sin(g.userData.k * PI) * 0.8)); } }
 }
 export function disposeChar(R) {
   Object.keys(R.tex).forEach(function (k) { R.tex[k].dispose(); });
@@ -271,7 +278,7 @@ const BOSS_OUT = { top: 0xf5f9fa, leg: 0xf5f9fa, shoe: 0xffffff, belly: 0xf5f9fa
        modes = ふだんの動き方 [名前, 出やすさ, 短い秒, 長い秒, 細かい設定](game.js の motion() を見る)
    tough = ダウンまでの がまん / par = 「鉄拳級」の発数の目安 */
 export const CHARS = [
-  { id: 'tencho', name: 'ぼったくり店長 ゴンゾウ', crime: '水1杯300円。お通し代3000円。', stage: 'shokudo', speed: 1, voice: 95, par: 200,
+  { id: 'tencho', name: 'ぼったくり店長 ゴンゾウ', crime: '水1杯300円。お通し代3000円。', stage: 'shokudo', speed: 1, voice: 95, par: 230, full: 290,
     blurb: '太っていて動けない。殴られ放題!', h: 1.0, w: 1.75, belly: 1.2, headS: 1.12, legW: 1.5, armW: 1.5, jig: 2.6,
     out: { top: 0xe9e4d4, leg: 0x2f3e63, shoe: 0x3a2a20, belly: 0xe9e4d4 },
     face: { skin: '#e3b088', eye: 'white', erx: 13, ery: 9, pupil: 5, lid: 0.45, slant: 0.7, look: [0, 2], white: '#fff6d8', brow: 0.95, browW: 9, mouth: 'gold', smugMouth: 'bero', vein: 1, ex: 34,
@@ -305,7 +312,7 @@ export const CHARS = [
       ov.arms = 1 - d;
     } },
 
-  { id: 'wakazo', name: 'イキリ若造 レン', crime: '人を「ザコ」と呼び、動画でさらす。', stage: 'konbini', speed: 2, voice: 190, par: 170,
+  { id: 'wakazo', name: 'イキリ若造 レン', crime: '人を「ザコ」と呼び、動画でさらす。', stage: 'konbini', speed: 2, voice: 190, par: 210, full: 270,
     blurb: 'ヘラヘラ歩き回って あおってくる。', h: 1.0, w: 0.95, headS: 1.0,
     out: { top: 0x7a3fd0, leg: 0x16161c, shoe: 0xf2f2f2 },
     face: { skin: '#f6d3b3', eye: 'white', lid: 0.45, slant: 0.6, pupil: 6, look: [0, 3], bags: 1, brow: 0.95, browW: 4, mouth: 'sneer', smugMouth: 'bero', browCol: '#8a6a20',
@@ -338,10 +345,10 @@ export const CHARS = [
       if (d > 0) { ov.y = Math.sin(d * PI) * 0.3; once(st, 'e', true, function () { fx.say('…今の、ナシで'); }); }
     } },
 
-  { id: 'oyaji', name: 'ガミガミおやじ 源さん', crime: '近所じゅうに どなり散らす。', stage: 'washitsu', speed: 2, voice: 120, par: 180,
+  { id: 'oyaji', name: 'ガミガミおやじ 源さん', crime: '近所じゅうに どなり散らす。', stage: 'washitsu', speed: 2, voice: 120, par: 220, full: 280,
     blurb: 'ずんずん近づいて どなり、すぐ下がる。', h: 0.93, w: 1.12, belly: 0.5, headS: 1.05,
     out: { top: 0xf2f0e6, leg: 0xcfd9de, shoe: 0x7a5230, belly: 0xc98f62, sleeve: 0xf2f0e6, fore: 0xeab98f },
-    face: { skin: '#e9a888', eye: 'white', erx: 12, ery: 9, pupil: 4.5, lid: 0.32, slant: 0.9, blood: 1, brow: 1.2, browW: 9, browCol: '#8a8a8a', mouth: 'yell', smugMouth: 'sneer', vein: 1, ey: 112,
+    face: { gentle: 1, skin: '#e9a888', eye: 'white', erx: 12, ery: 9, pupil: 4.5, lid: 0.32, slant: 0.9, blood: 1, brow: 1.2, browW: 9, browCol: '#8a8a8a', mouth: 'yell', smugMouth: 'sneer', vein: 1, ey: 112,
       under: function (x, e, cx, ey) { x.strokeStyle = 'rgba(120,70,45,.55)'; x.lineWidth = 3; for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(cx - 40, ey - 46 - i * 9); x.quadraticCurveTo(cx, ey - 52 - i * 9, cx + 40, ey - 46 - i * 9); x.stroke(); }
         x.beginPath(); x.moveTo(cx - 6, ey - 26); x.lineTo(cx - 3, ey - 10); x.moveTo(cx + 6, ey - 26); x.lineTo(cx + 3, ey - 10); x.stroke(); },
       over: function (x, e, cx, ey, lv) {
@@ -371,7 +378,7 @@ export const CHARS = [
       once(st, 'f', d > 0.9, function () { fx.say('…今のは 足がすべっただけじゃ'); });
     } },
 
-  { id: 'bucho', name: 'いじわる部長', crime: '手柄は自分、ミスは部下。残業代は出さない。', stage: 'office', speed: 3, voice: 135, par: 150,
+  { id: 'bucho', name: 'いじわる部長', crime: '手柄は自分、ミスは部下。残業代は出さない。', stage: 'office', speed: 3, voice: 135, par: 165, full: 215,
     blurb: '机の間を スッ、スッと すべるように動く。', h: 1.03, w: 1.05, belly: 0.25, headS: 1.0,
     out: { top: 0x1f2a48, leg: 0x1f2a48, shoe: 0x101010 },
     face: { skin: '#f0c9a4', eye: 'white', erx: 14, ery: 8, pupil: 4.5, lid: 0.42, slant: 0.6, look: [0, 2], brow: 0.7, mouth: 'sneer', smugMouth: 'grin', ey: 112,
@@ -408,7 +415,7 @@ export const CHARS = [
       once(st, 'e', d > 0, function () { fx.say('…労災、おりるかな'); });
     } },
 
-  { id: 'ponta', name: 'やさぐれ着ぐるみ ぽん太', crime: '子どもに舌打ち。風船も写真も有料。', stage: 'yuenchi', speed: 3, voice: 240, par: 130,
+  { id: 'ponta', name: 'やさぐれ着ぐるみ ぽん太', crime: '子どもに舌打ち。風船も写真も有料。', stage: 'yuenchi', speed: 3, voice: 240, par: 160, full: 205,
     blurb: '画面じゅうを ぴょんぴょん はね回る。', h: 0.86, w: 1.55, belly: 1.0, headS: 1.85, legW: 1.5, armW: 1.4, noEars: 1, jig: 1.6, cheekCol: 0x9a5a22, lidCol3: 0x6a3a5a,
     out: { top: 0xa9631f, leg: 0xa9631f, shoe: 0x7a4315, belly: 0xf3e3c4, hand: 0x7a4315, handR: 0.085 },
     face: { skin: '#a9631f', custom: function (x, e, cx, ey, lv) {
@@ -461,7 +468,7 @@ export const CHARS = [
       if (c > 0) { ov.rz = Math.sin(c * PI * 2) * 0.08; once(st, 'e', c > 0.3, function () { fx.say('…見た?'); }); }
     } },
 
-  { id: 'oji', name: 'ナルシスト王子 カズヤ', crime: '人の顔を見て 鼻で笑う。', stage: 'neon', speed: 3, voice: 170, par: 170,
+  { id: 'oji', name: 'ナルシスト王子 カズヤ', crime: '人の顔を見て 鼻で笑う。', stage: 'neon', speed: 3, voice: 170, par: 200, full: 260,
     blurb: 'くるくる回りながら 8の字に動く。顔を殴ると…?', h: 1.08, w: 0.95, headS: 0.98,
     out: { top: 0xf8f8ff, leg: 0xf8f8ff, shoe: 0xeeeeee },
     face: { skin: '#f8dcc0', eye: 'white', erx: 17, ery: 13, pupil: 8, iris: '#3f7fd8', lash: 1, lid: 0.4, slant: 0.25, look: [0, 4], brow: 0.35, browW: 4, browCol: '#b8902e', mouth: 'smirk', smugMouth: 'grin',
@@ -493,10 +500,10 @@ export const CHARS = [
       if (d > 0) { ov.y = Math.sin(d * PI) * 0.25; once(st, 'e', true, function () { fx.text('キラッ☆'); fx.snd('twinkle'); }); }
     } },
 
-  { id: 'roshi', name: 'インチキ仙人', crime: 'ニセの壺を売りつけ、修行料は前払い。', stage: 'chikurin', speed: 4, voice: 150, par: 150,
+  { id: 'roshi', name: 'インチキ仙人', crime: 'ニセの壺を売りつけ、修行料は前払い。', stage: 'chikurin', speed: 4, voice: 150, par: 170, full: 215,
     blurb: '酔っぱらいの千鳥足。のけぞって 読めない!', h: 0.88, w: 0.92, headS: 1.08,
     out: { top: 0xb3261e, leg: 0x1c1c1c, shoe: 0x111111 },
-    face: { skin: '#eab08a', eye: 'white', erx: 14, ery: 10, pupil: 4, lid: 0.5, slant: 0.5, look: [3, 3], white: '#fff3c8', wink: -1, browCol: '#ffffff', browW: 9, brow: 0.5, browY: 22, mouth: 'fang', smugMouth: 'bero',
+    face: { gentle: 1, skin: '#eab08a', eye: 'white', erx: 14, ery: 10, pupil: 4, lid: 0.5, slant: 0.5, look: [3, 3], white: '#fff3c8', wink: -1, browCol: '#ffffff', browW: 9, brow: 0.5, browY: 22, mouth: 'fang', smugMouth: 'bero',
       over: function (x, e, cx, ey) { x.fillStyle = 'rgba(255,70,50,.7)'; x.beginPath(); x.arc(cx, ey + 26, 10, 0, 7); x.fill();
         x.fillStyle = 'rgba(140,90,60,.45)'; for (const p of [[cx - 60, ey - 40], [cx + 50, ey - 52], [cx + 66, ey + 20]]) { x.beginPath(); x.arc(p[0], p[1], 5, 0, 7); x.fill(); }
         x.fillStyle = '#fff'; x.beginPath(); x.moveTo(cx - 50, ey + 92); x.quadraticCurveTo(cx, ey + 82, cx + 50, ey + 92); x.lineTo(cx + 60, 256); x.lineTo(cx - 60, 256); x.closePath(); x.fill();
@@ -526,7 +533,7 @@ export const CHARS = [
       if (c > 0) { ov.crouch = 0.36 * (1 - ease.io(seg(c, 0.5, 1))); ov.rz = Math.sin(c * 14) * 0.12 * (1 - c); once(st, 'e', c > 0.4, function () { fx.say('ひっく…いい酔いざましじゃ'); }); }
     } },
 
-  { id: 'kage', name: '忍者 カゲ丸', crime: '人を見下して「ザコ」と笑う。', stage: 'shiro', speed: 4, voice: 160, par: 110,
+  { id: 'kage', name: '忍者 カゲ丸', crime: '人を見下して「ザコ」と笑う。', stage: 'shiro', speed: 4, voice: 160, par: 145, full: 185,
     blurb: 'ドロンと消えて 屋根のあちこちに出る。', h: 0.98, w: 0.95, headS: 1.0, noEars: 1, cheekCol: 0x1b2440,
     out: { top: 0x1b2440, leg: 0x1b2440, shoe: 0x0e1322, hand: 0x1b2440 },
     face: { skin: '#f0c9a4', eye: 'white', erx: 16, ery: 10, pupil: 5, lid: 0.36, slant: 0.9, look: [0, 2], brow: 1.1, browW: 7, noMouth: 1, noNose: 1, masked: 1, capped: 1,
@@ -562,7 +569,7 @@ export const CHARS = [
       if (d > 0) ov.crouch = 0.3 * (1 - d);
     } },
 
-  { id: 'tetsu', name: '口だけチャンプ 鉄', crime: '自称・元チャンプ。客を「シロウト」とバカにする。', stage: 'ring', speed: 5, voice: 110, par: 100,
+  { id: 'tetsu', name: '口だけチャンプ 鉄', crime: '自称・元チャンプ。客を「シロウト」とバカにする。', stage: 'ring', speed: 5, voice: 110, par: 165, full: 210,
     blurb: '本職の殴られ屋。頭をふり続けて 当たらない!', h: 1.04, w: 1.12, headS: 0.98, armW: 1.25,
     out: { top: 0xf4f4f4, leg: 0xe2b48c, shoe: 0xffffff, shorts: 0x1c4fd0, sleeve: 0xe2b48c, hand: 0x1c4fd0, handR: 0.092, boot: 1 },
     face: { skin: '#e2b48c', eye: 'white', erx: 14, ery: 10, pupil: 6, lid: 0.4, slant: 0.5, look: [0, 2], brow: 0.8, browW: 9, mouth: 'sneer', smugMouth: 'bero',
@@ -593,10 +600,10 @@ export const CHARS = [
       if (d > 0) { ov.y = Math.sin(d * PI) * 0.6; once(st, 'e', true, function () { fx.say('まだまだぁ!'); fx.snd('cheer'); }); }
     } },
 
-  { id: 'boss', name: '工場の女帝 イヤミ田さん', crime: '嫌味・告げ口・シフトの勝手な書きかえ。', stage: 'kojo', speed: 5, voice: 260, par: 95, boss: 1, cheekCol: 0xfdfefe, lidCol3: 0x8a5fa0,
+  { id: 'boss', name: '工場の女帝 イヤミ田さん', crime: '嫌味・告げ口・シフトの勝手な書きかえ。', stage: 'kojo', speed: 5, voice: 260, par: 120, full: 155, boss: 1, cheekCol: 0xfdfefe,
     blurb: '【ボス】消える・はねる・しゃがむ。全部やる。目がいちばん嫌。', h: 0.9, w: 1.3, belly: 0.55, headS: 1.12, legW: 1.2, armW: 1.15,
     out: BOSS_OUT,
-    face: { skin: '#e9bf9e', eye: 'white', erx: 19, ery: 12, pupil: 5.2, iris: '#241208', lid: 0.46, slant: 0.95, look: [-4, 4], lidCol: '#9a6fa8', shadow: 'rgba(120,70,150,.5)', lash: 1, bags: 1,
+    face: { gentle: 1, skin: '#e9bf9e', eye: 'white', erx: 19, ery: 12, pupil: 5.2, iris: '#241208', lid: 0.46, slant: 0.95, look: [-4, 4], lidCol: '#9a6fa8', shadow: 'rgba(120,70,150,.5)', lash: 1, bags: 1,
       brow: 1.15, browW: 3.5, browCol: '#3a2a2a', browY: 27, noMouth: 1, noNose: 1, smugEye: 'arc', ex: 38, ey: 110, masked: 1, capped: 1,
       under: function (x, e, cx, ey, lv) {
         const top = ey + 24 + (lv >= 4 ? 44 : lv >= 2 ? 6 : 0);
@@ -635,10 +642,10 @@ export const CHARS = [
     } },
 
   /* ひみつの部屋: 画面いっぱいの顔。動かない。連打するだけ。全員を1回ずつダウンさせると入れる */
-  { id: 'room', room: 1, name: '殴りたい放題の部屋', crime: 'ぜんぶ。', stage: 'room', speed: 0, voice: 280, par: 380, boss: 1, hires: 3, lidCol3: 0x8a5fa0,
+  { id: 'room', room: 1, name: '殴りたい放題の部屋', crime: 'ぜんぶ。', stage: 'room', speed: 0, voice: 280, par: 380, full: 320, boss: 1, hires: 3,
     blurb: '画面いっぱいの あの顔。連打するだけ!', h: 0.9, w: 1.3, belly: 0.55, headS: 1.12, legW: 1.2, armW: 1.15,
     out: BOSS_OUT, dmgAt: [10, 30, 60, 100, 150, 210],
-    face: { skin: '#e9bf9e', eye: 'white', erx: 21, ery: 13, pupil: 5, iris: '#241208', lid: 0.52, slant: 1.05, look: [0, 5], lidCol: '#8a5fa0', shadow: 'rgba(110,50,150,.6)', lash: 1, bags: 1, blood: 1,
+    face: { gentle: 1, skin: '#e9bf9e', eye: 'white', erx: 21, ery: 13, pupil: 5, iris: '#241208', lid: 0.52, slant: 1.05, look: [0, 5], lidCol: '#8a5fa0', shadow: 'rgba(110,50,150,.6)', lash: 1, bags: 1, blood: 1,
       brow: 1.35, browW: 4, browCol: '#3a2a2a', browY: 28, ex: 40, ey: 98, my: 172, noNose: 1, mouth: 'sneer', smugMouth: 'bero', lipCol: '#b0124a', vein: 1, capped: 1,
       under: function (x, e, cx, ey) {
         x.strokeStyle = 'rgba(110,55,45,.6)'; x.lineWidth = 2.5; x.lineCap = 'round';

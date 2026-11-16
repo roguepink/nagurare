@@ -1,6 +1,6 @@
 /* 殴られ屋 — ゲーム本体(画面の流れ・殴る・動き回る・よける・ダウン・顔のはれ・必殺・ひみつの部屋) */
 import { THREE, G, add, grp, canvasTex, dispose, clamp, lerp, ease } from './kit.js';
-import { CHARS, buildChar, disposeChar, setDamage, animSwell, growTower } from './chars.js';
+import { CHARS, buildChar, disposeChar, setDamage, animSwell, setBumps, setSwell, BUMP_MAX } from './chars.js';
 import { buildStage } from './stages.js';
 import { SFX } from './sfx.js';
 
@@ -118,11 +118,22 @@ function main() {
   }
   const bigEl = $('big'), bubble = $('bubble'), sukiEl = $('suki'), spEl = $('sp'), linesEl = $('lines');
   function big(text, cls) { bigEl.className = 'stroke'; bigEl.textContent = text; void bigEl.offsetWidth; bigEl.className = 'stroke go ' + (cls || ''); }
+  /* ふきだし。顔にかぶらない所に出す(ふだんは下。顔が下に来たら上へよける)。だれのセリフか 名前の札つき */
+  function placeBubble() {
+    const lowY = H * (S.room ? 0.93 : 0.84), topY = H * 0.38, bh = S.bubH || 90, r = S.headScr[2], ht = S.headScr[1] - r * 1.35, hb = S.headScr[1] + r * 1.3;
+    if (!S.room) {
+      const hitLow = hb > lowY - bh - 12 && ht < lowY, hitTop = ht < topY + 12 && hb > topY - bh;
+      if (S.bubLow && hitLow && !hitTop) S.bubLow = false; else if (!S.bubLow && hitTop && !hitLow) S.bubLow = true;
+    } else S.bubLow = true;
+    bubble.classList.toggle('low', S.bubLow && !S.room);
+    bubble.style.left = (W / 2) + 'px'; bubble.style.top = (S.bubLow ? lowY : topY) + 'px';
+  }
   function say(text, kind, sec) {
     if (S.state !== 'play' && S.state !== 'ready') return;
-    bubble.textContent = text; bubble.className = 'on ' + (kind || 'taunt'); S.sayT = sec || 1.9;
-    S.bub[0] = clamp(S.headScr[0], W * 0.46, W * 0.54); S.bub[1] = S.room ? H * 0.86 : Math.max(H * 0.36, S.headScr[1] - S.headScr[2] * 1.6 - 20);
-    void bubble.offsetWidth; bubble.classList.add('in');
+    const d = S.R.def, who = d.room || d.boss ? 'イヤミ田さん' : d.name.split(' ').pop();
+    bubble.textContent = ''; const tag = document.createElement('i'); tag.textContent = who; bubble.appendChild(tag); bubble.appendChild(document.createTextNode(text));
+    bubble.className = 'on ' + (kind || 'taunt'); S.sayT = sec || 1.9; S.bubLow = true; S.bubH = bubble.offsetHeight + 24;
+    placeBubble(); void bubble.offsetWidth; bubble.classList.add('in');
   }
   function vib(p) { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {} }
   const FX = {
@@ -209,13 +220,22 @@ function main() {
     for (let i = 0; i < vs.length; i++) { const v = vs[i]; if (Math.hypot(g.sx - v.x, g.sy - v.y) < v.r + v.tol) { hit = v; break; } }
     if (hit) onHit(hit.kind, g); else onMiss(g);
   }
+  /* 顔の変わり方。p = 0〜1(その1分で殴れそうな数に対して、いま何割か)。たたき始めは変わらず、最後にやっと限界 */
+  const LV_AT = [0.12, 0.27, 0.43, 0.6, 0.77, 0.94];
+  function applyProg(p, say) {
+    const R = S.R; S.prog = p;
+    let lv = 0; for (let i = 0; i < 6; i++) if (p >= LV_AT[i]) lv = i + 1;
+    if (lv !== R.lv) setDamage(R, lv, FX, say && lv > R.lv);
+    setSwell(R, p);
+    let nb = p < 0.12 ? 0 : Math.min(12, 1 + Math.floor((p - 0.12) / 0.88 * 11.99)); if (S.room && p > 1) nb = Math.min(BUMP_MAX, 12 + Math.floor((p - 1) / 0.06));
+    const had = R.bumpG.length;
+    if (nb !== had) { setBumps(R, nb); if (say && nb > had) { const t = R.lastTier; pop(t <= 1 ? 'たんこぶ!' : t === 2 ? 'たんこぶの上に たんこぶ!' : 'たんこぶ ' + t + 'だん!', 'bump', S.headScr[0], Math.max(H * 0.16, S.headScr[1] - S.headScr[2] * (S.room ? 0.9 : 1.5))); SFX.pop(); R.sq = Math.min(1.4, R.sq + 0.6); } }
+  }
   function addDamage(head) {
-    const R = S.R, d = R.def;
     if (head) S.heads++; else S.bodies++;
-    const pts = S.heads + S.bodies * 0.4, tb = d.dmgAt || CFG.DMG, k = d.dmgAt ? 1 : clamp(d.par / 170, 0.6, 1.7);
-    let lv = 0; for (let i = 0; i < 6; i++) if (pts >= tb[i] * k) lv = i + 1;
-    if (lv > R.lv) setDamage(R, lv, FX, true);
-    if (S.room && R.lv >= 6) { if (!S.towerAt) S.towerAt = S.hits + 35; else if (S.hits >= S.towerAt) { S.towerAt = S.hits + 35; if (growTower(R)) { FX.dmg('たんこぶ タワー ' + (R.tower.length + 1) + '段!', 3); } } }
+    const el = S.time0 - S.time; let F = S.R.def.full || 200;
+    if (el > 8) F = clamp(S.hits / el * S.time0, F * 0.5, F * 1.7);   // その人の殴る速さに合わせる
+    applyProg(Math.max(S.prog, S.hits / F), true);
   }
   function onHit(kind, g, special) {
     const R = S.R, A = S.ai, d = R.def, head = kind === 'head';
@@ -297,8 +317,8 @@ function main() {
     const R = S.R, d = R.def;
     R.P = { x: 0, crouch: 0, lean: 0, bend: 0, z: d.ai.home || 0, twist: 0, jump: 0 };
     R.ov = {}; R.hs = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 }; R.bs = { x: 0, vx: 0, z: 0, vz: 0, y: 0, vy: 0 }; R.wob = 0; R.flail = 0; R.ovKick = 0; R.sq = 0; R.hspin = 0; R.walk = 0; R.spd = 0;
-    if (R.lv !== 0) setDamage(R, 0, null, false);
-    R.swC = [0, 0, 0, 0, 0, 0, 0, 0]; animSwell(R, 1); R.cheeks.forEach(function (m) { m.visible = false; }); R.lids.forEach(function (m) { m.visible = false; }); R.bumps.forEach(function (b) { b.visible = false; });
+    S.prog = 0; if (R.lv !== 0) setDamage(R, 0, null, false); else R.lidT = [0, 0];
+    setSwell(R, 0); setBumps(R, 0); R.swC = [0, 0, 0, 0]; R.puffC = 0; R.cheeks.forEach(function (m) { m.visible = false; }); R.lids.forEach(function (m) { m.visible = false; });
     S.ai = { t: Math.random() * 10, dodge: null, cd: 0, stun: 0, pend: null, hidden: false, unhide: 0, tauntT: rand(2.5, 4), smug: 0, hitT: 0, mode: 'idle', downT: 0, st: null, expr: '', mv: null, mvDef: null, spin: 0, sx: 0, open: null, bag: {} };
     pickMode(true);
     endDownClean();
@@ -433,7 +453,7 @@ function main() {
     const wk = P.jump > 0.05 ? 0 : Math.min(0.6, R.spd * 0.45);
     for (let i = 0; i < 2; i++) { const lg = R.legs[i]; lg.position.y = R.L - cr; lg.scale.y = (R.L - cr) / R.L; lg.rotation.x = ov.kick ? Math.sin(t * 30 + i * PI) * 0.75 * ov.kick : Math.sin(R.walk + i * PI) * wk + (P.jump > 0.05 ? (i ? -0.5 : 0.4) : 0); }
     R.head.position.y = R.T + 0.05 + ov.headUp; R.head.rotation.set(hs.x + Math.sin(t * 1.7) * 0.03 - 0.06, ov.headRy + hs.y + R.hspin, hs.z + ov.headRz);
-    const sq = R.sq * Math.cos(t * 55) * 0.5 + R.sq * 0.5; R.hc.scale.set(1 + 0.2 * sq, 1 - 0.17 * sq, 1 + 0.08 * sq);
+    const sq = R.sq * Math.cos(t * 55) * 0.5 + R.sq * 0.5; const pf = R.puffC || 0; R.hc.scale.set((1 + 0.2 * sq) * (1 + 0.1 * pf), 1 - 0.17 * sq, (1 + 0.08 * sq) * (1 + 0.05 * pf));
     const fl = Math.max(ov.arms, R.flail), talk = (d.ai.nag && S.sayT > 0 && A.mode === 'idle' && !S.room) ? 1 : 0;
     for (let i = 0; i < 2; i++) { const a = R.arms[i], p = d.arms[i];
       let ux = lerp(p.ux, -2.5, fl * 0.85) + Math.sin(t * 28 + i * 2) * 0.5 * fl, uz = p.uz + fl * 0.7, fx = lerp(p.fx, -0.3, fl), fz = p.fz * (1 - fl);
@@ -516,10 +536,10 @@ function main() {
   function startGame(i) {
     loadChar(i);
     const d = CHARS[i];
-    S.time = CFG.TIME; S.hits = 0; S.combo = 0; S.maxCombo = 0; S.downs = 0; S.gauge = 0; S.heads = 0; S.bodies = 0; S.slow = 0; S.hitstop = 0; S.lastHit = 9; S.sp = null; S.spCD = 8; S.spCount = 0; S.towerAt = 0;
+    S.time = CFG.TIME; S.hits = 0; S.combo = 0; S.maxCombo = 0; S.downs = 0; S.gauge = 0; S.heads = 0; S.bodies = 0; S.slow = 0; S.hitstop = 0; S.lastHit = 9; S.sp = null; S.spCD = 8; S.spCount = 0; S.prog = 0; S.time0 = CFG.TIME;
     S.cmtN = S.room ? 6 : 10; spEl.className = ''; sukiEl.className = ''; gloveMat.color.set(0xe21f26); gloveMat2.color.set(0xc5161d);
-    const tm = /[#&]t=(\d+)/.exec(HASH); if (tm) S.time = +tm[1];
-    const lm = /[#&]lv=(\d)/.exec(HASH); if (lm) setDamage(S.R, +lm[1], FX, false);
+    const tm = /[#&]t=(\d+)/.exec(HASH); if (tm) S.time = +tm[1]; S.time0 = S.time;
+    const lm = /[#&]lv=(\d)/.exec(HASH); if (lm && +lm[1]) applyProg(LV_AT[+lm[1] - 1] + 0.01, false);
     $('hits').firstChild.nodeValue = '0'; $('combo').className = 'stroke'; $('foeName').textContent = d.room ? 'なぐりたい放題' : d.name; show('gaugeWrap', !d.room);
     show('select', false); show('result', false); show('pause', false); show('warn', false); show('hud', true); show('ready', true);
     $('readyWho').textContent = d.room ? '♡ ごほうびの部屋 ♡' : 'VS ' + d.name; $('readyTxt').textContent = 'READY…';
@@ -536,7 +556,7 @@ function main() {
     if (isNew) { best[d.id] = S.hits; try { localStorage.setItem(CFG.BEST_KEY, JSON.stringify(best)); } catch (e) {} }
     $('resHits').firstChild.nodeValue = String(S.hits);
     $('resRank').textContent = d.room ? (r < 0.5 ? 'ちょっとスッキリ' : r < 1 ? 'だいぶスッキリ' : r < 1.3 ? '超スッキリ!' : 'スッキリの神!!') : (r < 0.35 ? 'なでなで級' : r < 0.7 ? 'ビンタ級' : r < 1 ? 'ゲンコツ級' : r < 1.4 ? '鉄拳級' : '鬼神級');
-    $('resStats').innerHTML = (d.room ? 'たんこぶタワー ' + (S.R.tower.length ? S.R.tower.length + 1 : S.R.lv >= 6 ? 1 : 0) + '段' : 'ダウンさせた回数 ' + S.downs + '回') + ' / 最大 ' + S.maxCombo + 'コンボ' + (S.spCount ? ' / 必殺 ' + S.spCount + '回' : '') + '<br>最高 ' + (best[d.id] || 0) + '発';
+    $('resStats').innerHTML = (d.room ? '' : 'ダウンさせた回数 ' + S.downs + '回 / ') + 'たんこぶ ' + S.R.bumpG.length + 'こ' + ' / 最大 ' + S.maxCombo + 'コンボ' + (S.spCount ? ' / 必殺 ' + S.spCount + '回' : '') + '<br>最高 ' + (best[d.id] || 0) + '発';
     show('resNew', isNew && S.hits > 0); $('resFace').src = portraits[S.ci] || ''; $('resByeTxt').textContent = '「' + d.bye + '」';
     $('resUnlock').textContent = d.room ? '' : cleared.boss ? '♡ ひみつの箱が ひらいているよ(ボスの下を見てね)♡' : d.id === 'boss' ? 'おしい! ボスを1回ダウンさせると、ひみつの箱が ひらくよ' : 'ボスのイヤミ田さんを ダウンさせると、ひみつの箱が ひらくよ';
     show('hud', false); show('result', true); S.state = 'result'; S.plays++;
@@ -627,7 +647,7 @@ function main() {
         const gq = Math.round(clamp(S.gauge / S.R.def.tough, 0, 1) * 100) + (S.ai.mode === 'down' ? 200 : 0); if (gq !== hudG) { hudG = gq; $('gauge').style.transform = 'scaleX(' + (gq >= 200 ? 1 : gq / 100) + ')'; $('gaugeWrap').classList.toggle('full', gq > 85); }
       }
       if (S.sayT > 0) { S.sayT -= rdt; if (S.sayT <= 0) bubble.className = '';
-        else { if (!S.room) { S.bub[0] += (clamp(S.headScr[0], W * 0.46, W * 0.54) - S.bub[0]) * Math.min(1, rdt * 2.5); S.bub[1] += (Math.max(H * 0.36, S.headScr[1] - S.headScr[2] * 1.6 - 20) - S.bub[1]) * Math.min(1, rdt * 2.5); } bubble.style.left = S.bub[0] + 'px'; bubble.style.top = S.bub[1] + 'px'; } }
+        else placeBubble(); }
       if (S.ai && S.ai.open) { sukiEl.style.left = clamp(S.headScr[0], 80, W - 80) + 'px'; sukiEl.style.top = Math.max(H * 0.2, S.headScr[1] - S.headScr[2] * 1.2) + 'px'; }
       renderer.render(scene, camera);
     } catch (e) { console.error(e); }
@@ -639,7 +659,7 @@ function main() {
   buildGrid();
   loadChar(Math.floor(Math.random() * ROOM_I));
   window.__booted = true;
-  window.__g = { S: S, CHARS: CHARS, start: startGame, down: function () { S.gauge = 9999; startDown(); }, special: startSpecial, lv: function (n) { setDamage(S.R, n, FX, true); }, volumes: volumes, punch: punch, result: showResult };
+  window.__g = { S: S, CHARS: CHARS, start: startGame, down: function () { S.gauge = 9999; startDown(); }, special: startSpecial, lv: function (n) { applyProg(n ? LV_AT[n - 1] + 0.01 : 0, true); }, prog: function (p) { applyProg(p, true); }, volumes: volumes, punch: punch, result: showResult };
   requestAnimationFrame(function (t) { last = t; frame(t); });
   if (/play/.test(HASH)) { const m = /[#&]c=(\d+)/.exec(HASH); warned = true; startGame(m ? clamp(+m[1] - 1, 0, CHARS.length - 1) : 0); }
 }
