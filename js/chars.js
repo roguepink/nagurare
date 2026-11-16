@@ -24,6 +24,14 @@ function drawEye(x, f, px, ey, s, expr) {
     x.fillStyle = '#fff'; x.beginPath(); x.arc(px - 6, ey - 3, 6, 0, 7); x.fill(); x.beginPath(); x.arc(px + 6, ey + 9, 3.5, 0, 7); x.fill(); x.beginPath(); x.arc(px - 7, ey + 11, 2, 0, 7); x.fill();
     x.fillStyle = 'rgba(110,200,255,.9)'; x.beginPath(); x.ellipse(px, ey + 21, 17, 6, 0, 0, 7); x.fill(); x.beginPath(); x.ellipse(px + s * 12, ey + 32, 5, 8, 0, 0, 7); x.fill(); return;
   }
+  if (expr === 'cry') {   // 泣く(ぎゅっと閉じた目から 涙がどばー)
+    x.strokeStyle = INK; x.lineWidth = 6; x.beginPath(); x.arc(px, ey + 12, 17, 1.15 * PI, 1.85 * PI); x.stroke();
+    x.fillStyle = 'rgba(110,200,255,.92)'; x.beginPath(); x.moveTo(px - 9, ey + 4); x.quadraticCurveTo(px - 15 + s * 4, ey + 40, px - 11 + s * 8, ey + 78); x.lineTo(px + 11 + s * 8, ey + 78); x.quadraticCurveTo(px + 15 + s * 4, ey + 40, px + 9, ey + 4); x.closePath(); x.fill();
+    x.fillStyle = 'rgba(255,255,255,.7)'; x.fillRect(px - 3 + s * 3, ey + 14, 3, 40); return;
+  }
+  if (expr === 'hen') f = Object.assign({}, f, { look: [-s * 10, 4], lid: 0.04, slant: 0, pupil: (f.pupil || 7) * 0.9, erx: (f.erx || 17) + 2, ery: (f.ery || 12) + 5 });   // 変顔(より目)
+  else if (expr === 'angry') f = Object.assign({}, f, { lid: Math.max(f.lid || 0, 0.42), slant: 1.4, blood: 1 });
+  else if (expr === 'irk') f = Object.assign({}, f, s === 1 ? { lid: 0.74, slant: 0.15 } : { lid: 0.18, slant: 1.0, blood: 1 });
   if (f.wink === s) { x.strokeStyle = INK; x.lineWidth = 5; x.beginPath(); x.moveTo(px - 15, ey - 2); x.quadraticCurveTo(px, ey + 7, px + 15, ey - 4); x.stroke(); return; }
   if (expr === 'smug' && f.smugEye === 'arc') {   // 笑って細くなる いやな目
     if (f.shadow) { x.fillStyle = f.shadow; x.beginPath(); x.ellipse(px, ey - 5, rx + 6, ry + 6, 0, 0, 7); x.fill(); }
@@ -75,6 +83,9 @@ function drawMouth(x, type, cx, my, f, lv) {
     case 'bero':
       x.moveTo(cx - 17, my + 1); x.quadraticCurveTo(cx + 4, my + 8, cx + 24, my - 9); x.stroke();
       x.fillStyle = '#ff6f8f'; x.beginPath(); x.ellipse(cx + 6, my + 13, 9, 13, 0.15, 0, 7); x.fill(); x.strokeStyle = '#4a1c18'; x.lineWidth = 3; x.stroke(); x.lineWidth = 2; x.beginPath(); x.moveTo(cx + 5, my + 6); x.lineTo(cx + 7, my + 20); x.stroke(); break;
+    case 'grit':   // 歯をくいしばる
+      x.fillStyle = '#fff'; x.moveTo(cx - 24, my - 9); x.lineTo(cx + 24, my - 11); x.lineTo(cx + 22, my + 12); x.lineTo(cx - 22, my + 10); x.closePath(); x.fill(); x.stroke();
+      x.strokeStyle = '#4a1c18'; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - 22, my); x.lineTo(cx + 22, my); for (let i = -2; i <= 2; i++) { x.moveTo(cx + i * 8, my - 9); x.lineTo(cx + i * 8, my + 11); } x.stroke(); gap(cx - 16, my - 9, 8, 9); break;
     case 'wavy': x.moveTo(cx - 20, my); for (let i = 0; i <= 20; i++) x.lineTo(cx - 20 + i * 2, my + Math.sin(i * 0.95) * 5); x.stroke(); break;
   }
 }
@@ -109,6 +120,7 @@ function dmgOver(x, f, lv, cx, ey, ex, my, expr) {
   }
   if (lv >= 5) { x.strokeStyle = 'rgba(90,190,255,.9)'; x.lineWidth = 5; x.lineCap = 'round'; for (const s of [-1, 1]) { x.beginPath(); x.moveTo(cx + s * (ex + 8), ey + 16); x.quadraticCurveTo(cx + s * (ex + 14), ey + (f.masked ? 20 : 40), cx + s * (ex + 9), ey + (f.masked ? 24 : 62)); x.stroke(); } }
   if (lv >= 5 && !f.capped) { bandage(x, cx + 34, ey - 48, 0.7, 36); bandage(x, cx + 34, ey - 48, -0.7, 36); }
+  if (f.bleed && lv >= 3) { x.strokeStyle = '#e02a2a'; x.lineWidth = 5; x.lineCap = 'round'; for (const s of (lv >= 5 ? [-1, 1] : [1])) { x.beginPath(); x.moveTo(cx + s * 5, ey + 33); x.lineTo(cx + s * 7, ey + 50 + (lv - 3) * 3); x.stroke(); x.fillStyle = '#e02a2a'; x.beginPath(); x.arc(cx + s * 7, ey + 53 + (lv - 3) * 3, 4, 0, 7); x.fill(); } }
 }
 function faceTex(f, expr, lv, k) {
   k = k || 1;
@@ -116,20 +128,22 @@ function faceTex(f, expr, lv, k) {
     x.scale(k, k);
     const cx = 256, ey = f.ey || 114, ex = f.ex || 36, my = f.my || 178;
     x.fillStyle = f.skin; x.fillRect(0, 0, 512, 256);
+    if (expr === 'angry') { x.fillStyle = 'rgba(255,50,30,.22)'; x.fillRect(0, 0, 512, 256); }
     if (f.custom) { f.custom(x, expr, cx, ey, lv); return; }
     dmgUnder(x, f, lv, cx, ey, ex);
     if (f.under) f.under(x, expr, cx, ey, lv);
-    if (expr === 'hit' || expr === 'dizzy' || expr === 'beg') { x.fillStyle = 'rgba(255,80,80,.45)'; for (const s of [-1, 1]) { x.beginPath(); x.ellipse(cx + s * (ex + 24), ey + 36, 20, 12, 0, 0, 7); x.fill(); } }
+    if (expr === 'hit' || expr === 'dizzy' || expr === 'beg' || expr === 'cry') { x.fillStyle = 'rgba(255,80,80,.45)'; for (const s of [-1, 1]) { x.beginPath(); x.ellipse(cx + s * (ex + 24), ey + 36, 20, 12, 0, 0, 7); x.fill(); } }
     for (const s of [-1, 1]) drawEye(x, f, cx + s * ex, ey, s, expr);
     if (!f.noBrow) {
-      const a = expr === 'hit' || expr === 'beg' ? -0.9 : expr === 'dizzy' ? -0.5 : (f.brow || 0), by = ey - (f.browY || 25) - (expr === 'beg' ? 6 : 0);
+      const a = expr === 'hit' || expr === 'beg' || expr === 'cry' ? -0.9 : expr === 'dizzy' ? -0.5 : expr === 'angry' ? 1.9 : expr === 'irk' ? 1.1 : expr === 'hen' ? -0.4 : (f.brow || 0), by = ey - (f.browY || 25) - (expr === 'beg' || expr === 'hen' ? 6 : 0);
       x.strokeStyle = f.browCol || INK; x.lineWidth = f.browW || 6; x.lineCap = 'round';
-      for (const s of [-1, 1]) { const px = cx + s * ex, up = (expr === 'smug' && s === 1) ? -7 : 0;
+      for (const s of [-1, 1]) { const px = cx + s * ex, up = ((expr === 'smug' || expr === 'irk') && s === 1) ? -8 : (expr === 'hen' && s === -1) ? -11 : 0;
         x.beginPath(); x.moveTo(px - s * 15, by + a * 8 + up); x.lineTo(px + s * 18, by - a * 5 + up); x.stroke(); }
     }
-    if (f.vein && expr !== 'hit' && expr !== 'dizzy' && expr !== 'beg') vein(x, cx + 64, ey - 50);
+    if (expr === 'angry' || expr === 'irk') { vein(x, cx + 64, ey - 50); if (expr === 'angry') vein(x, cx - 72, ey - 44); }
+    else if (f.vein && expr !== 'hit' && expr !== 'dizzy' && expr !== 'beg' && expr !== 'cry' && expr !== 'hen') vein(x, cx + 64, ey - 50);
     if (!f.noNose) { x.strokeStyle = 'rgba(110,55,35,.6)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, ey + 27, 5.5, 0.1 * PI, 0.9 * PI); x.stroke(); }
-    if (!f.noMouth) drawMouth(x, expr === 'hit' ? 'shout' : expr === 'dizzy' || expr === 'beg' ? 'wavy' : expr === 'smug' ? (f.smugMouth || 'bero') : (f.mouth || 'sneer'), cx, my, f, lv);
+    if (!f.noMouth) drawMouth(x, expr === 'hit' || expr === 'cry' ? 'shout' : expr === 'dizzy' || expr === 'beg' ? 'wavy' : expr === 'angry' ? 'yell' : expr === 'irk' ? 'grit' : expr === 'hen' ? 'bero' : expr === 'smug' ? (f.smugMouth || 'bero') : (f.mouth || 'sneer'), cx, my, f, lv);
     if (f.over) f.over(x, expr, cx, ey, lv);
     dmgOver(x, f, lv, cx, ey, ex, my, expr);
   });
@@ -169,7 +183,8 @@ export function buildChar(def) {
   add(R.hips, G.cyl, skin, [0, T + 0.02, 0], [0.055, 0.12, 0.055]);
   R.head = grp(R.hips, 0, T + 0.05, 0);
   R.hc = grp(R.head, 0, hr * 0.95, 0);
-  EXPRS.forEach(function (e) { R.tex[e] = faceTex(def.face, e, 0, def.hires); });
+  R.exprs = EXPRS.concat(def.moreExpr || []);
+  R.exprs.forEach(function (e) { R.tex[e] = faceTex(def.face, e, 0, def.hires); });
   R.faceMat = new THREE.MeshLambertMaterial({ map: R.tex.idle });
   R.headMesh = new THREE.Mesh(G.head, R.faceMat); R.headMesh.scale.set(hr, hr * 1.07, hr); R.hc.add(R.headMesh);
   if (!def.noEars) for (const s of [-1, 1]) add(R.hc, G.sph, skin, [s * hr * 0.98, -hr * 0.05, 0], [hr * 0.12, hr * 0.22, hr * 0.16]);
@@ -188,7 +203,7 @@ export function buildChar(def) {
   const cheekCol = def.cheekCol || new THREE.Color(skin).lerp(new THREE.Color(0xff5a5a), 0.45).getHex();
   R.cheeks = [-1, 1].map(function (s) { const m = add(R.hc, G.sph, cheekCol, [s * hr * 0.58, -hr * 0.34, hr * 0.6], 0.001); m.visible = false; return m; });
   R.lids = [-1, 1].map(function (s) { const m = add(R.hc, G.sph, def.lidCol3 || (def.face.gentle ? 0xf2a2a2 : 0xb97aa6), [s * hr * 0.4, hr * 0.13, hr * 0.86], 0.001); m.visible = false; return m; });
-  R.bumpG = []; R.bumpTier = [0, 0, 0]; R.lastTier = 0; R.swT = [0, 0]; R.lidT = [0, 0]; R.swC = [0, 0, 0, 0]; R.puff = 0; R.puffC = 0;
+  R.bumpG = []; R.bumpTier = [0, 0, 0, 0, 0]; R.lastTier = 0; R.swT = [0, 0]; R.lidT = [0, 0]; R.swC = [0, 0, 0, 0]; R.puff = 0; R.puffC = 0;
   def.dress(R, { T: T, L: L, hr: hr, w: w, skin: skin });
   R.root.traverse(function (m) { if (m.isMesh) m.frustumCulled = false; });
   return R;
@@ -198,7 +213,7 @@ const DMG_TEXT = ['', 'ほっぺ ぷくっ!', '青タン できた!', '目が �
 const DMG_TEXT_G = ['', 'ほっぺ ぷくっ!', 'ほっぺ ぱんぱん!', '目が はれた!', 'くちびる たらこ!', 'おかお まんまる!', 'もう かんべんして〜!!'];
 export function setDamage(R, lv, fx, say) {
   R.lv = lv;
-  EXPRS.forEach(function (e) { const old = R.tex[e]; R.tex[e] = faceTex(R.def.face, e, lv, R.def.hires); old.dispose(); });
+  R.exprs.forEach(function (e) { const old = R.tex[e]; R.tex[e] = faceTex(R.def.face, e, lv, R.def.hires); old.dispose(); });
   R.faceMat.map = R.tex[R.curExpr] || R.tex.idle;
   R.lidT = [lv >= 3 ? 0.27 : 0, lv >= 6 ? 0.27 : lv >= 4 ? 0.16 : 0];
   let t = (R.def.face.gentle ? DMG_TEXT_G : DMG_TEXT)[lv];
@@ -211,11 +226,11 @@ export function setSwell(R, p) {
   R.swT[0] = p > 0.08 ? (0.13 + 0.39 * p) * m : 0; R.swT[1] = p > 0.22 ? (0.06 + 0.41 * p) * m : 0; R.puff = p;
 }
 /* たんこぶ。昔のアニメのように、たんこぶの上に たんこぶが 積み上がる(n = 全部の数) */
-const BUMP_AT = [[-0.45, 0.9, 0.3], [0.5, 0.84, 0.1], [0.05, 1.0, -0.2]], BUMP_SEQ = [0, 1, 0, 2, 1, 0, 2, 1, 0, 2, 1, 0, 0, 1, 2, 0, 1, 0];
+const BUMP_AT = [[-0.45, 0.9, 0.3], [0.5, 0.84, 0.1], [0.05, 1.0, -0.2], [-0.05, 0.93, 0.5], [0.45, 0.9, -0.4]], BUMP_SEQ = [0, 1, 0, 2, 1, 0, 2, 1, 0, 2, 1, 0, 3, 4, 0, 3, 1, 4, 2, 3, 0, 4, 1, 3, 2, 4, 0, 3, 1, 4, 2, 0, 3, 4, 1, 0];
 export const BUMP_MAX = BUMP_SEQ.length;
 export function setBumps(R, n) {
   const hr = R.hr;
-  if (n < R.bumpG.length) { R.bumpG.forEach(function (g) { R.hc.remove(g); }); R.bumpG = []; R.bumpTier = [0, 0, 0]; }
+  if (n < R.bumpG.length) { R.bumpG.forEach(function (g) { R.hc.remove(g); }); R.bumpG = []; R.bumpTier = [0, 0, 0, 0, 0]; }
   while (R.bumpG.length < n && R.bumpG.length < BUMP_SEQ.length) {
     const w = BUMP_SEQ[R.bumpG.length], i = R.bumpTier[w]++, b = BUMP_AT[w], k = Math.pow(0.9, i);
     let y = b[1]; for (let j = 0; j < i; j++) y += 0.3 * (Math.pow(0.9, j) + Math.pow(0.9, j + 1)) * 0.82;
@@ -600,6 +615,47 @@ export const CHARS = [
       if (d > 0) { ov.y = Math.sin(d * PI) * 0.6; once(st, 'e', true, function () { fx.say('まだまだぁ!'); fx.snd('cheer'); }); }
     } },
 
+  { id: 'nobu', name: 'NOBU', crime: 'このアプリを作った 張本人。', stage: 'sakusha', speed: 5, voice: 125, par: 100, full: 135, grow: 0.85, bumpMax: 30, happy: 1,
+    blurb: '【最強】作者だから いちばん速い。顔も だれよりも ふくらむ!', h: 0.97, w: 1.08, belly: 0.5, headS: 1.04,
+    out: { top: 0x545861, leg: 0x3f5f8f, shoe: 0x2e9a4a, belly: 0x545861 },
+    face: { skin: '#d9a777', bleed: 1, eye: 'white', erx: 15, ery: 11, pupil: 6.5, lid: 0.28, slant: 0.25, look: [0, 1], brow: 0.35, browW: 8, browCol: '#1a1512', mouth: 'grin', smugMouth: 'bero',
+      under: function (x, e, cx, ey) {   // 短いあごひげ(ほかのヒゲは なし)
+        x.fillStyle = 'rgba(40,32,28,.5)'; x.beginPath(); x.ellipse(cx, ey + 91, 42, 17, 0, 0, 7); x.fill();
+        x.fillStyle = 'rgba(25,20,18,.8)'; for (let i = 0; i < 420; i++) { const a = (i * 2.399) % 6.283, r = Math.sqrt((i * 0.618) % 1); x.fillRect(cx + Math.cos(a) * r * 42, ey + 91 + Math.sin(a) * r * 17, 2, 3); } },
+      over: function (x, e, cx, ey) { x.strokeStyle = 'rgba(110,60,35,.5)'; x.lineWidth = 2.5; for (const s of [-1, 1]) { x.beginPath(); x.moveTo(cx + s * 56, ey - 2); x.lineTo(cx + s * 66, ey - 6); x.moveTo(cx + s * 56, ey + 4); x.lineTo(cx + s * 66, ey + 7); x.stroke(); } } },
+    arms: [ARMS.phone, ARMS.down],
+    ai: { quick: 36, p: 0.97, react: [0.01, 0.045], hold: 0.27, cd: 0.04, moves: ['step', 'duck', 'back', 'jump', 'warp', 'spin'], stun: 0.04, home: -0.8,   // ノブさん指示: 作者は最強(ボスより速い)
+      modes: [['weave', 3, 2, 3, { a: 0.42, f: 14, cz: 0.22 }], ['warp', 3, 2, 3, { every: [0.25, 0.45] }], ['hop', 2, 1.8, 2.8, { every: [0.01, 0.06], h: [0.5, 1.25] }],
+        ['dash', 3, 1.8, 2.6, { every: [0.15, 0.3] }], ['duckwalk', 2, 1.4, 2.2, { f: 5.5 }], ['eight', 2, 1.8, 2.6, { f: 3.4 }], ['drunk', 1, 1.6, 2.4, { sp: 2.4 }], ['close', 1, 1.0, 1.2, {}]] }, tough: 130,
+    lines: ['このアプリ、ぼくが作りました', 'もっと意地悪なやつ 作ってやる', '次は 100人 出そうかな', 'ボス、強すぎた?わざとだよ', 'バグ?それは 仕様です', '評価は 星5で たのむよ', 'ぼくは スマホで 言うだけ', '広告なし。えらいでしょ?', 'つぎの ゲームも 考え中', '当たらないでしょ?そう作ったの', '作者だから 最強なんだよ', 'ぼくに当てたら えらい'],
+    ouch: ['ごめんなさい!もう作りません!', 'こんなアプリ 作って すみません!', 'もう 最強に しません!', 'ボス、弱くするから!', 'アップデートするから!', 'スマホだけは やめて!', '無料なのに ひどい!', '作者を殴るゲームって 何!?', 'でも ちょっと 楽しい…', 'ニヤニヤが とまらない', 'つぎは もっと 嫌なやつ 出すぞ', '星1 つけないで!', 'すみません 調子のりました', '顔が!顔が でかくなる!', 'たんこぶ 多すぎない!?', 'もう こりごりです(うそ)'],
+    bye: 'あそんでくれて ありがとう。また作るね(こりてない)',
+    dress: function (R, K) {
+      const k = 0x17130f; hairCap(R, k, 0.44 * PI, -0.62);
+      add(R.hc, G.sph, k, [0, K.hr * 0.8, K.hr * 0.28], [K.hr * 0.82, K.hr * 0.34, K.hr * 0.6], [-0.4, 0, 0]);      // 前髪は上げて うしろへ流す
+      add(R.hc, G.sph, k, [0, K.hr * 0.1, -K.hr * 0.6], [K.hr * 0.86, K.hr * 0.78, K.hr * 0.5]);
+      for (let i = 0; i < 14; i++) { const a = i / 14 * PI * 2, z = Math.sin(a); if (z > 0.55) continue; add(R.hc, G.sph, k, [Math.cos(a) * K.hr * 0.74, K.hr * (0.5 + (i % 2) * 0.14), z * K.hr * 0.7 - K.hr * 0.3], K.hr * 0.23); }   // 軽い天然パーマ
+      add(R.hc, G.sph, 0x241e1a, [0, -K.hr * 0.74, K.hr * 0.5], [K.hr * 0.36, K.hr * 0.2, K.hr * 0.3]);   // あごひげ(短い)
+      for (let i = 0; i < 6; i++) add(R.hc, G.sph, k, [(i - 2.5) * K.hr * 0.3, K.hr * (0.88 - Math.abs(i - 2.5) * 0.06), K.hr * (0.42 - Math.abs(i - 2.5) * 0.08)], K.hr * 0.2);   // 前のほうの くせ毛
+      add(R.hips, G.sph, 0x494d55, [0, K.T * 0.95, -0.11], [0.17, 0.14, 0.11]);
+      add(R.hips, G.box, 0x494d55, [0, K.T * 0.26, 0.165 * K.w + 0.06], [0.25, 0.11, 0.03]);
+      for (const s of [-1, 1]) add(R.hips, G.cyl, 0xe8e8e8, [s * 0.035, K.T * 0.72, 0.165 * K.w + 0.02], [0.006, 0.14, 0.006]);
+      const ph = grp(R.arms[0].el, 0, -0.33, 0.02); R.acc.phone = ph;
+      add(ph, G.box, 0x111111, [0, 0, 0], [0.075, 0.14, 0.012]); add(ph, G.box, 0xffe14a, [0, 0, -0.007], [0.062, 0.12, 0.004], null, { glow: 0xffb000 });
+    },
+    dmg: function (R, lv) { return lv === 3 ? '鼻血 たらー!' : lv === 5 ? 'それでも ニヤニヤ!' : lv === 6 ? '顔が ふうせん!!' : ''; },
+    downT: 3.0, down: function (R, k, fx, st) {
+      const ov = R.ov; ov.expr = 'smug';
+      const b = seg(k, 0.3, 0.45), c = seg(k, 0.45, 0.8), d = seg(k, 0.8, 1);
+      once(st, 's', true, function () { fx.text('おっとっと…'); });
+      if (b === 0) { ov.x = Math.sin(k * 30) * 0.25; ov.rz = Math.sin(k * 24) * 0.22; ov.arms = 0.6; }
+      ov.rx = 1.48 * ease.in2(b) * (1 - ease.out(d)); ov.z = -1.3 * ease.out(seg(k, 0, 0.45)) * (1 - ease.io(d));
+      once(st, 'a', k > 0.45, function () { fx.shake(1.4); fx.snd('thud'); fx.text('ズザーッ!'); fx.burst('dust', 12, [0, 0.1, 0.2]); });
+      once(st, 'b', c > 0.4, function () { fx.flash(0.9); fx.snd('pop'); fx.text('カシャッ!'); fx.say('たおれた所も 自撮り…'); });
+      if (c > 0 && d === 0) ov.kick = 0.3 * Math.max(0, Math.sin(c * 18));
+      if (d > 0) { ov.y = Math.sin(d * PI) * 0.3; once(st, 'e', true, function () { fx.say('いまの、ネタに しよっと'); }); }
+    } },
+
   { id: 'boss', name: '工場の女帝 イヤミ田さん', crime: '嫌味・告げ口・シフトの勝手な書きかえ。', stage: 'kojo', speed: 5, voice: 260, par: 120, full: 155, boss: 1, cheekCol: 0xfdfefe,
     blurb: '【ボス】消える・はねる・しゃがむ。全部やる。目がいちばん嫌。', h: 0.9, w: 1.3, belly: 0.55, headS: 1.12, legW: 1.2, armW: 1.15,
     out: BOSS_OUT,
@@ -642,7 +698,7 @@ export const CHARS = [
     } },
 
   /* ひみつの部屋: 画面いっぱいの顔。動かない。連打するだけ。全員を1回ずつダウンさせると入れる */
-  { id: 'room', room: 1, name: '殴りたい放題の部屋', crime: 'ぜんぶ。', stage: 'room', speed: 0, voice: 280, par: 380, full: 320, boss: 1, hires: 3,
+  { id: 'room', room: 1, name: '殴りたい放題の部屋', crime: 'ぜんぶ。', stage: 'room', speed: 0, voice: 280, par: 380, full: 320, boss: 1, hires: 2, moreExpr: ['cry', 'angry', 'irk', 'hen'], bumpMax: 16,
     blurb: '画面いっぱいの あの顔。連打するだけ!', h: 0.9, w: 1.3, belly: 0.55, headS: 1.12, legW: 1.2, armW: 1.15,
     out: BOSS_OUT, dmgAt: [10, 30, 60, 100, 150, 210],
     face: { gentle: 1, skin: '#e9bf9e', eye: 'white', erx: 21, ery: 13, pupil: 5, iris: '#241208', lid: 0.52, slant: 1.05, look: [0, 5], lidCol: '#8a5fa0', shadow: 'rgba(110,50,150,.6)', lash: 1, bags: 1, blood: 1,
@@ -661,6 +717,16 @@ export const CHARS = [
     lines: ['殴れるもんなら 殴ってみなさいよ', 'あんたに そんな度胸あるの?', 'ふん、どうせ口だけでしょ', 'あたしは悪くないわよ'],
     ouch: ['ごめんなさい!', 'もうしません!', '許してください〜!', 'シフト、代わりますぅ!', 'おやつ あげるから!', 'キャベツの千切り、全部やります!', 'いい子になりますぅ', 'ママに言わないで!', '嫌味は 1日1回にします!', 'ゆるしてぴょん', 'はんせいしてまーす', 'あやまるから!ほんとに!', 'もう 目つき悪くしません!', 'やさしいリーダーになります!', 'ひぃ〜ん', 'ごめんちゃい',
       'お茶 いれますから!', '肩 もみますから!', 'もう告げ口しません!', 'ゆるして にゃん', '休憩 ながめにどうぞ!', 'あたしが わるうございました!', 'えーん えーん', 'おこらないでぇ'],
+    moods: {   // 気分ごとのセリフ(game.js が 2〜3秒ごとに気分を変える)
+      nasty: ['あんた、手が遅いのよ', 'そのパンチ、蚊?', 'へたくそねぇ', 'あたしの方が 強いわよ', 'ひまなの?', 'もっと 腰いれなさいよ', '見てらんないわ', 'はい、やり直し', 'それで 全力?', 'あくびが 出るわ', '最近の人は これだから', '手だけ 動かして 頭は?'],
+      sorry: ['ごめんなさい!', 'もうしません!', '許してください〜!', 'シフト、代わりますぅ!', 'おやつ あげるから!', 'キャベツの千切り、全部やります!', 'いい子に なりますぅ', 'ママに 言わないで!', '嫌味は 1日1回にします!', 'ゆるして ぴょん', 'ごめんちゃい', 'お茶 いれますから!', '肩 もみますから!', 'もう 告げ口しません!', 'ゆるして にゃん', 'あたしが わるうございました!', 'やさしいリーダーに なります!'],
+      lie: ['ぜんぜん 痛くないわよ', 'はんせいしました。うそです', 'もう嫌味は 言いません(言う)', 'いまのは わざと 当たったの', 'ないてないわよ!', 'あたし 本当は やさしいのよ?', '明日から 変わります(変わらない)', 'きいてないわ〜', 'たんこぶ?これは 髪型よ', 'あたし 20歳よ?', '当たってないわよ、いまの', 'ぜんぶ 計算どおりよ'],
+      provoke: ['べろべろばー', 'くやしかったら もっと殴りな', 'ほれほれ、こっちよ', 'あっかんべー', 'はい ざんねーん', 'ぷぷぷ', 'ここよ、ここ!', 'ねぇ いま どんな気持ち?', 'へなちょこパンチ〜', 'おにさん こちら', 'もう つかれたの?', 'よわ〜い'],
+      angry: ['キィーーッ!', 'おぼえてなさいよ!', '店長に 言うわよ!', 'いいかげんに しなさい!', 'ゆるさないからね!', 'シフト へらすわよ!', 'あたしを 誰だと思ってんの!', 'リーダーよ!?'],
+      irk: ['チッ', 'あーもう!', 'イライラするわね', 'うるさいわね', 'しつこい!', 'まだやるの?', 'はぁ〜(ため息)', 'ほんと しつこいわね'],
+      cry: ['えーん えーん', 'ひぃ〜ん', 'うわぁぁん', 'ママぁ〜', 'いたいよぉ', 'ぐすん…', 'おうちに かえる〜', 'もう やだぁ'],
+      fake: ['いまの、ビビったでしょ?', 'やーい、ビビった ビビった', '殴ると思った?ざんねーん', '目 つぶったでしょ、いま', 'うふふ、こわかった?', 'ほら、スマホ 落としそうだった']
+    },
     bye: '…もう嫌味は言いません(たぶん)',
     dress: bossDress, dmg: bossDmg, downT: 1, down: function () {} }
 ];

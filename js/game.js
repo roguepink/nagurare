@@ -13,7 +13,8 @@ const AUTO = /auto/.test(HASH), autoQ = [], AUTO_LAG = (function () { const m = 
 const CFG = { TIME: 60, T_OUT: 0.085, T_BACK: 0.13, BEST_KEY: 'nagurare-best-v1', CLEAR_KEY: 'nagurare-clear-v1', WARN_KEY: 'nagurare-warned-v1', HEAD_PT: 7, BODY_PT: 4, DMG: [5, 13, 24, 38, 56, 78] };
 const WORDS = { head: ['バキッ!', 'ゴッ!', 'パァン!', 'ドゴッ!', 'ベチン!', 'ガツン!', 'バチーン!', 'メキッ!'], body: ['ボスッ', 'ドスッ', 'ボコッ', 'ズン', 'ドムッ', 'ボフッ'], crit: ['会心!!', 'クリーンヒット!!', 'どまんなか!!', 'ジャストミート!!'] };
 const SP_NAMES = ['怒りのドドドラッシュ', 'スッキリ大噴火パンチ', '日ごろのうらみ百連発', 'ごほうびメガトンラッシュ', 'ストレス全部のせ連打'];
-const CARD_BG = { shokudo: 0xc9a06a, konbini: 0x26346e, washitsu: 0xa9b27a, office: 0x8a9aae, yuenchi: 0x6aa9cc, neon: 0x3a1a5a, chikurin: 0x7fae72, shiro: 0x1a2550, ring: 0x2a3f7a, kojo: 0xa9c9cf, room: 0x5a1a4a };
+const CARD_BG = { shokudo: 0xc9a06a, konbini: 0x26346e, washitsu: 0xa9b27a, office: 0x8a9aae, yuenchi: 0x6aa9cc, neon: 0x3a1a5a, chikurin: 0x7fae72, shiro: 0x1a2550, ring: 0x2a3f7a, kojo: 0xa9c9cf, room: 0x5a1a4a, sakusha: 0xc9b99a };
+const MOOD_EX = { nasty: 'idle', lie: 'smug', provoke: 'hen', angry: 'angry', irk: 'irk', sorry: 'beg', cry: 'cry', fake: 'smug' }, MOOD_KIND = { sorry: 'cute', cry: 'cute', angry: 'ouch', irk: 'ouch' };
 const ROOM_I = CHARS.length - 1;
 
 function fail() { $('select').classList.add('hidden'); $('nogl').classList.remove('hidden'); window.__booted = true; }
@@ -132,7 +133,7 @@ function main() {
     if (S.state !== 'play' && S.state !== 'ready') return;
     const d = S.R.def, who = d.room || d.boss ? 'イヤミ田さん' : d.name.split(' ').pop();
     bubble.textContent = ''; const tag = document.createElement('i'); tag.textContent = who; bubble.appendChild(tag); bubble.appendChild(document.createTextNode(text));
-    bubble.className = 'on ' + (kind || 'taunt'); S.sayT = sec || 1.9; S.bubLow = true; S.bubH = bubble.offsetHeight + 24;
+    bubble.style.fontSize = text.length > 12 ? 'clamp(19px, 5.5vw, 30px)' : ''; bubble.className = 'on ' + (kind || 'taunt'); S.sayT = sec || 1.9; S.bubLow = true; S.bubH = bubble.offsetHeight + 24;
     placeBubble(); void bubble.offsetWidth; bubble.classList.add('in');
   }
   function vib(p) { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {} }
@@ -143,8 +144,10 @@ function main() {
     count: function (n) { big(String(n), 'yel'); },
     say: function (t) { say(t, 'ouch', 1.8); },
     dmg: function (t, lv) { pop(t, 'dmg', W / 2, H * (S.room ? 0.3 : 0.36)); SFX.pop(); S.hitstop = Math.max(S.hitstop, 0.07); S.flash = Math.max(S.flash, 0.12); if (S.R) { S.R.hc.getWorldPosition(_v); burst('star', 5 + lv, [_v.x, _v.y, _v.z + 0.1], true); } },
+    flash: function (a) { S.flash = Math.max(S.flash, a); },
     burst: burst
   };
+  function moodLine(name) { const A = S.ai, k = 'm_' + name; if (!A.bag[k] || !A.bag[k].length) A.bag[k] = shuffled(S.R.def.moods[name]); return A.bag[k].pop(); }
   function nextLine(kind) { const A = S.ai, d = S.R.def; if (!A.bag[kind] || !A.bag[kind].length) A.bag[kind] = shuffled(d[kind]); return A.bag[kind].pop(); }
 
   /* ---------- グローブ(画面の下から飛び出す自分の手) ---------- */
@@ -183,7 +186,7 @@ function main() {
   function volumes() {
     const R = S.R, out = [];
     if (!R || !R.body.visible) return out;
-    R.hc.getWorldPosition(_v); if (_v.z > -7.5 && _v.z < 1.9) { const a = scrR(_v, R.hr * 1.12); out.push({ kind: 'head', x: a[0], y: a[1], r: a[2], tol: 12 }); }
+    R.hc.getWorldPosition(_v); if (_v.z > -7.5 && _v.z < 1.9) { const a = scrR(_v, R.hr * 1.12 * (1 + (R.def.grow || 0) * (R.puffC || 0))); out.push({ kind: 'head', x: a[0], y: a[1], r: a[2], tol: 12 }); }
     const w = R.def.w, bl = 1 + 0.15 * (R.def.belly || 0);
     _v.set(0, R.T * 0.55, 0); R.hips.localToWorld(_v); if (_v.z > -7.5 && _v.z < 1.9) { const a = scrR(_v, 0.25 * w * bl); out.push({ kind: 'body', x: a[0], y: a[1], r: a[2], tol: 6 }); }
     _v.set(0, R.T * 0.14, 0); R.hips.localToWorld(_v); if (_v.z > -7.5 && _v.z < 1.9) { const a = scrR(_v, 0.23 * w * bl); out.push({ kind: 'body', x: a[0], y: a[1], r: a[2], tol: 6 }); }
@@ -227,7 +230,7 @@ function main() {
     let lv = 0; for (let i = 0; i < 6; i++) if (p >= LV_AT[i]) lv = i + 1;
     if (lv !== R.lv) setDamage(R, lv, FX, say && lv > R.lv);
     setSwell(R, p);
-    let nb = p < 0.12 ? 0 : Math.min(12, 1 + Math.floor((p - 0.12) / 0.88 * 11.99)); if (S.room && p > 1) nb = Math.min(BUMP_MAX, 12 + Math.floor((p - 1) / 0.06));
+    const mx = R.def.bumpMax || 12; let nb = p < 0.12 ? 0 : Math.min(mx, 1 + Math.floor((p - 0.12) / 0.88 * (mx - 0.01))); if (p > 1 && R.def.bumpMax) nb = Math.min(BUMP_MAX, mx + Math.floor((p - 1) / 0.05));
     const had = R.bumpG.length;
     if (nb !== had) { setBumps(R, nb); if (say && nb > had) { const t = R.lastTier; pop(t <= 1 ? 'たんこぶ!' : t === 2 ? 'たんこぶの上に たんこぶ!' : 'たんこぶ ' + t + 'だん!', 'bump', S.headScr[0], Math.max(H * 0.16, S.headScr[1] - S.headScr[2] * (S.room ? 0.9 : 1.5))); SFX.pop(); R.sq = Math.min(1.4, R.sq + 0.6); } }
   }
@@ -243,7 +246,7 @@ function main() {
     S.hits++; S.combo++; S.comboT = 1.25; S.lastHit = 0; if (S.combo > S.maxCombo) S.maxCombo = S.combo;
     S.hitstop = Math.max(S.hitstop, crit ? 0.1 : head ? 0.042 : 0.026); S.shake = Math.max(S.shake, crit ? 1.5 : head ? 0.8 : 0.45); S.fovKick = Math.min(6, S.fovKick + (crit ? 4 : head ? 2.4 : 1.2));
     if (head) { S.flash = Math.max(S.flash, crit ? 0.4 : 0.17); linesEl.classList.remove('go'); void linesEl.offsetWidth; linesEl.classList.add('go'); }
-    A.hitT = crit ? 0.5 : 0.24; A.stun = Math.max(A.stun, d.ai.stun * (crit ? 2.5 : 1)); A.smug = 0;
+    A.hitT = S.room ? (crit ? 0.3 : 0.07) : crit ? 0.5 : 0.24; A.stun = Math.max(A.stun, d.ai.stun * (crit ? 2.5 : 1)); A.smug = 0;
     // どこを殴ったかで、頭が立体的に動く(左をたたけば右へ回る・あごなら上へ)
     const dx = clamp((g.sx - S.headScr[0]) / Math.max(8, S.headScr[2]), -1.2, 1.2), dy = clamp((g.sy - S.headScr[1]) / Math.max(8, S.headScr[2]), -1.2, 1.2), pw = (S.room ? 1.25 : 1) * (crit ? 1.6 : 1);
     if (head) {
@@ -253,7 +256,7 @@ function main() {
       if (crit) { R.hspin += (dx >= 0 ? -1 : 1) * PI * 2; S.slow = Math.max(S.slow, 0.22); }
     } else { R.bs.vx += 5.5; R.hs.vx += 4; R.hs.vy += -dx * 3; }
     R.bs.vz -= head ? 1.6 : 2.4; R.wob = Math.min(2, R.wob + (head ? 0.5 : 1));
-    impactFx(g.world, (head ? 1.5 : 1) * (crit ? 1.7 : 1) * (S.room ? 0.3 : g.far), special || crit);
+    impactFx(g.world, (head ? 1.5 : 1) * (crit ? 1.7 : 1) * (S.room ? 0.2 : g.far), special || crit);
     burst(head ? 'sweat' : 'star', head ? 4 : 2, [g.world.x, g.world.y, g.world.z], true);
     if (crit) { burst('tooth', 2, [g.world.x, g.world.y, g.world.z], true); burst('star', 6, [g.world.x, g.world.y, g.world.z], true); pop(pick(WORDS.crit), 'crit', g.sx, g.sy - 46); SFX.combo(8); }
     if (S.room && S.hits % 9 === 0) burst('heart', 2, [g.world.x, g.world.y, g.world.z], true);
@@ -268,7 +271,7 @@ function main() {
       if (S.gauge >= d.tough) startDown();
     } else if (A.mode === 'down') R.ovKick = 1;
     // セリフ(何発か殴るごとに1回・毎回ちがう)
-    if (!special && A.mode !== 'down' && --S.cmtN <= 0 && S.sayT <= 0.3) { S.cmtN = S.room ? 8 + Math.floor(Math.random() * 5) : 11 + Math.floor(Math.random() * 7); say(nextLine('ouch'), S.room ? 'cute' : 'ouch'); }
+    if (!special && !S.room && A.mode !== 'down' && --S.cmtN <= 0 && S.sayT <= 0.3) { S.cmtN = S.room ? 8 + Math.floor(Math.random() * 5) : 11 + Math.floor(Math.random() * 7); say(nextLine('ouch'), S.room ? 'cute' : 'ouch'); }
     const hEl = $('hits'); hEl.firstChild.nodeValue = String(S.hits); hEl.classList.remove('bump'); void hEl.offsetWidth; hEl.classList.add('bump');
     const cEl = $('combo');
     if (S.combo >= 3) { cEl.innerHTML = '<b>' + S.combo + '</b><span>コンボ</span>'; cEl.className = 'stroke on c' + Math.min(4, Math.floor(S.combo / 15)); cEl.style.fontSize = (1 + Math.min(S.combo, 60) / 200).toFixed(2) + 'em'; void cEl.offsetWidth; cEl.classList.add('bump'); }
@@ -309,6 +312,38 @@ function main() {
       S.R.hc.getWorldPosition(_v); burst('star', 16, [_v.x, _v.y, _v.z + 0.2], true); burst('tooth', 3, [_v.x, _v.y, _v.z + 0.2], true); impactFx(_v, 3, true);
       S.sp = null; if (S.ai.mode !== 'down') startDown();
     }
+  }
+
+  /* ---------- ひみつの部屋: 気分がころころ変わる・殴るふりをしてくる ---------- */
+  const fist = grp(scene); fist.visible = false;
+  add(fist, G.sph, 0xff8fb0, [0, 0, 0], [0.1, 0.088, 0.09]);
+  for (let i = 0; i < 4; i++) add(fist, G.sph, 0xffa6c0, [-0.06 + i * 0.04, 0.035, 0.07], 0.031);
+  add(fist, G.sph, 0xff7fa6, [0.085, -0.02, 0.04], [0.035, 0.045, 0.05]);
+  add(fist, G.cyl, 0xa9d8ee, [0, 0, -0.14], [0.075, 0.14, 0.075], [PI / 2, 0, 0]);
+  add(fist, G.cyl, 0xf5f9fa, [0, 0, -0.95], [0.07, 1.5, 0.07], [PI / 2, 0, 0]);
+  fist.traverse(function (m) { if (m.isMesh) m.frustumCulled = false; });
+  function roomMood(dt) {
+    const A = S.ai, p = S.prog;
+    if (S.fake) return;
+    if (!A.mood) A.mood = { name: 'nasty', t: 0, dur: 1.7 };
+    A.mood.t += dt; S.fakeT -= dt;
+    if (S.fakeT <= 0 && S.time > 4) { S.fake = { t: 0, hit: false }; S.fakeT = rand(13, 19); SFX.whoosh(); bubble.className = ''; S.sayT = 0; return; }
+    if (A.mood.t >= A.mood.dur) {
+      const pool = p < 0.25 ? ['nasty', 'nasty', 'provoke', 'lie', 'angry'] : p < 0.6 ? ['nasty', 'provoke', 'lie', 'angry', 'irk', 'irk', 'sorry', 'cry'] : ['sorry', 'sorry', 'cry', 'cry', 'lie', 'provoke', 'angry', 'irk'];
+      let n; do { n = pick(pool); } while (n === A.mood.name);
+      A.mood = { name: n, t: 0, dur: rand(2.3, 3.3) };
+      say(moodLine(n), MOOD_KIND[n] || 'taunt', 2.0);
+      if (n === 'angry') { S.shake = Math.max(S.shake, 0.9); SFX.grunt(330); } else if (n === 'cry') SFX.grunt(430);
+    }
+  }
+  const _f0 = new THREE.Vector3(), _f1 = new THREE.Vector3();
+  function updateFake(rdt) {   // 向こうのこぶしが 画面いっぱいまで飛んできて、寸前で止まる
+    const f = S.fake; f.t += rdt;
+    const a = clamp(f.t / 0.28, 0, 1), back = clamp((f.t - 0.95) / 0.3, 0, 1), k = ease.in2(a) * (1 - ease.io(back));
+    _f0.set(0.3, LOOKY - 0.28, S.R.hr + 0.1); _f1.set(0, LOOKY - 0.01, camBase.z - 0.33);
+    fist.position.lerpVectors(_f0, _f1, k); fist.scale.setScalar(0.5 + 0.5 * k); fist.lookAt(camera.position); fist.visible = true;
+    if (!f.hit && a >= 1) { f.hit = true; S.shake = 2.4; S.flash = Math.max(S.flash, 0.25); big('うわっ!?', 'red'); SFX.thud(); vib([70]); }
+    if (f.t >= 1.3) { fist.visible = false; S.fake = null; S.ai.mood = { name: 'fake', t: 0, dur: 2.3 }; say(moodLine('fake'), 'taunt', 2.2); }
   }
 
   /* ---------- 相手の動き ---------- */
@@ -425,7 +460,8 @@ function main() {
         else if (D.type === 'jump') { T.jump = Math.max(T.jump, Math.sin(k * PI) * 1.1); }
         else if (D.type === 'spin') { if (A.mv.name !== 'eight') P.twist = ease.io(k) * PI * 2; T.lean += -D.dir * 0.2; }
       }
-      if (playing) { A.tauntT -= dt; if (A.tauntT <= 0) { if (S.sayT <= 0 && A.stun <= 0 && !A.hidden) taunt(); else A.tauntT = 1; } }
+      if (playing && S.room) roomMood(dt);
+      if (playing && !S.room) { A.tauntT -= dt; if (A.tauntT <= 0) { if (S.sayT <= 0 && A.stun <= 0 && !A.hidden) taunt(); else A.tauntT = 1; } }
       if (A.open) { A.open.t -= dt; if (A.open.t <= 0) { A.open = null; sukiEl.className = ''; } }
     }
     // 頭が画面の外に出ないように
@@ -453,7 +489,7 @@ function main() {
     const wk = P.jump > 0.05 ? 0 : Math.min(0.6, R.spd * 0.45);
     for (let i = 0; i < 2; i++) { const lg = R.legs[i]; lg.position.y = R.L - cr; lg.scale.y = (R.L - cr) / R.L; lg.rotation.x = ov.kick ? Math.sin(t * 30 + i * PI) * 0.75 * ov.kick : Math.sin(R.walk + i * PI) * wk + (P.jump > 0.05 ? (i ? -0.5 : 0.4) : 0); }
     R.head.position.y = R.T + 0.05 + ov.headUp; R.head.rotation.set(hs.x + Math.sin(t * 1.7) * 0.03 - 0.06, ov.headRy + hs.y + R.hspin, hs.z + ov.headRz);
-    const sq = R.sq * Math.cos(t * 55) * 0.5 + R.sq * 0.5; const pf = R.puffC || 0; R.hc.scale.set((1 + 0.2 * sq) * (1 + 0.1 * pf), 1 - 0.17 * sq, (1 + 0.08 * sq) * (1 + 0.05 * pf));
+    const sq = R.sq * Math.cos(t * 55) * 0.5 + R.sq * 0.5; const pf = R.puffC || 0, gw = 1 + (d.grow || 0) * pf; R.hc.scale.set((1 + 0.2 * sq) * (1 + 0.1 * pf) * gw, (1 - 0.17 * sq) * gw, (1 + 0.08 * sq) * (1 + 0.05 * pf) * gw); R.hc.position.y = R.hr * 0.95 * gw;
     const fl = Math.max(ov.arms, R.flail), talk = (d.ai.nag && S.sayT > 0 && A.mode === 'idle' && !S.room) ? 1 : 0;
     for (let i = 0; i < 2; i++) { const a = R.arms[i], p = d.arms[i];
       let ux = lerp(p.ux, -2.5, fl * 0.85) + Math.sin(t * 28 + i * 2) * 0.5 * fl, uz = p.uz + fl * 0.7, fx = lerp(p.fx, -0.3, fl), fz = p.fz * (1 - fl);
@@ -464,7 +500,7 @@ function main() {
     shadow.position.set(x, 0.012, clamp(z, -9, 1)); const ss = 0.42 * d.w / (1 + y * 0.7); shadow.scale.set(ss, ss * 0.6, 1); shadow.visible = R.body.visible && y < 5 && !S.room;
     // 顔
     const woozy = (S.gauge > d.tough * 0.86 && playing) || (S.sp && S.sp.t > 0.9);
-    let ex = A.mode === 'down' ? (ov.expr || 'dizzy') : A.hitT > 0 ? 'hit' : woozy ? 'dizzy' : (S.room && R.lv >= 4) ? 'beg' : A.smug > 0 ? 'smug' : 'idle';
+    let ex = A.mode === 'down' ? (ov.expr || 'dizzy') : A.hitT > 0 ? 'hit' : S.room ? (MOOD_EX[A.mood ? A.mood.name : 'nasty'] || 'idle') : (woozy && !d.happy) ? 'dizzy' : (A.smug > 0 || (d.happy && R.lv >= 3)) ? 'smug' : 'idle';
     if (ex !== A.expr) { A.expr = ex; R.curExpr = ex; R.faceMat.map = R.tex[ex]; }
     // ふきだし・星の輪の位置
     R.hc.getWorldPosition(_v); const hsr = scrR(_v, R.hr); S.headScr[0] = hsr[0]; S.headScr[1] = hsr[1]; S.headScr[2] = hsr[2];
@@ -536,7 +572,7 @@ function main() {
   function startGame(i) {
     loadChar(i);
     const d = CHARS[i];
-    S.time = CFG.TIME; S.hits = 0; S.combo = 0; S.maxCombo = 0; S.downs = 0; S.gauge = 0; S.heads = 0; S.bodies = 0; S.slow = 0; S.hitstop = 0; S.lastHit = 9; S.sp = null; S.spCD = 8; S.spCount = 0; S.prog = 0; S.time0 = CFG.TIME;
+    S.time = CFG.TIME; S.hits = 0; S.combo = 0; S.maxCombo = 0; S.downs = 0; S.gauge = 0; S.heads = 0; S.bodies = 0; S.slow = 0; S.hitstop = 0; S.lastHit = 9; S.sp = null; S.spCD = 8; S.spCount = 0; S.prog = 0; S.time0 = CFG.TIME; S.fake = null; S.fakeT = rand(8, 12); fist.visible = false;
     S.cmtN = S.room ? 6 : 10; spEl.className = ''; sukiEl.className = ''; gloveMat.color.set(0xe21f26); gloveMat2.color.set(0xc5161d);
     const tm = /[#&]t=(\d+)/.exec(HASH); if (tm) S.time = +tm[1]; S.time0 = S.time;
     const lm = /[#&]lv=(\d)/.exec(HASH); if (lm && +lm[1]) applyProg(LV_AT[+lm[1] - 1] + 0.01, false);
@@ -545,7 +581,7 @@ function main() {
     $('readyWho').textContent = d.room ? '♡ ごほうびの部屋 ♡' : 'VS ' + d.name; $('readyTxt').textContent = 'READY…';
     S.state = 'ready'; S.readyT = 0; gl[0].t = gl[1].t = -1;
     say(d.lines[0], 'taunt', 1.3);
-    SFX.bgm(true, [55, 62, 49, 58, 65, 52, 46, 61, 55, 44, 65][i]);
+    SFX.bgm(true, [55, 62, 49, 58, 65, 52, 46, 61, 55, 50, 44, 65][i]);
   }
   function finish() {
     S.state = 'finish'; S.finT = 1.7; big('そこまで!', 'red'); SFX.bell(3); SFX.bgm(false); bubble.className = ''; sukiEl.className = ''; S.ai.open = null; vib([60, 50, 60, 50, 120]);
@@ -563,6 +599,7 @@ function main() {
     if (isNew) SFX.cheer();
   }
   function toSelect() {
+    S.fake = null; fist.visible = false;
     S.state = 'select'; SFX.bgm(false); bubble.className = ''; sukiEl.className = ''; spEl.className = ''; S.sp = null;
     show('hud', false); show('result', false); show('pause', false); show('ready', false); show('hint', false); show('select', true);
     buildGrid(); if (S.R) resetFoe();
@@ -597,7 +634,7 @@ function main() {
     baseFov = ASP < 1 ? 60 : 48; TANH = Math.tan(baseFov * PI / 360);
     let dz = 0.85;
     if (S.room && S.R) {   // ひみつの部屋: 顔が画面いっぱい
-      const R = S.R, hy = R.L + R.T + 0.05 + R.hr * 0.95, dW = R.hr * 2.3 / 0.99 / (2 * TANH * ASP), dH = R.hr * 2.5 / 0.62 / (2 * TANH);
+      const R = S.R, hy = R.L + R.T + 0.05 + R.hr * 0.95, dW = R.hr * 2.3 / 1.15 / (2 * TANH * ASP), dH = R.hr * 2.5 / 0.74 / (2 * TANH);
       camBase.set(0, hy + R.hr * 0.12, Math.max(dW, dH)); LOOKY = hy + R.hr * 0.12; dz = 0.3; restScale = 0.34; hitScale = 0.55;
     } else { camBase.set(0, ASP < 1 ? 1.42 : 1.25, ASP < 1 ? 3.0 : 3.1); LOOKY = ASP < 1 ? 1.17 : 1.0; restScale = 1; hitScale = 1.45; }
     camera.fov = baseFov; camera.updateProjectionMatrix(); camera.position.copy(camBase); camera.lookAt(0, LOOKY, 0);
@@ -617,6 +654,7 @@ function main() {
       if (S.slow > 0) { S.slow -= rdt; ts = 0.3; }
       if (S.state === 'finish') { ts = 0.25; S.finT -= rdt; if (S.finT <= 0) showResult(); }
       if (S.sp) { updateSpecial(rdt); if (S.sp && S.sp.t < 0.9) ts = 0.04; }
+      if (S.fake) { if (S.state === 'play') updateFake(rdt); else { S.fake = null; fist.visible = false; } }
       let dt = rdt * ts;
       if (S.hitstop > 0) { S.hitstop -= rdt; dt = 0; }
       S.T += dt;
