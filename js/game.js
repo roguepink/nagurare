@@ -311,8 +311,9 @@ function main() {
   function startDown() {
     const A = S.ai, d = S.R.def; A.mode = 'down'; A.downT = 0; A.st = {}; A.dodge = null; A.pend = null; A.hidden = false; A.open = null; sukiEl.className = ''; S.R.P.twist = 0; A.spin = 0;
     S.downs++; S.gauge = 0; S.slow = Math.max(S.slow, 0.5); S.shake = Math.max(S.shake, 1.6); S.flash = Math.max(S.flash, 0.3); S.fovKick = 6;
+    const firstBoss = d.id === 'boss' && !cleared.boss;
     if (!cleared[d.id]) { cleared[d.id] = 1; try { localStorage.setItem(CFG.CLEAR_KEY, JSON.stringify(cleared)); } catch (e) {} }
-    SFX.down(); big('ダウン!!', 'red'); vib([30, 40, 70]);
+    SFX.down(); big(firstBoss ? 'ダウン!! ひみつの箱が ひらいた♡' : 'ダウン!!', 'red'); if (firstBoss) SFX.twinkle(); vib([30, 40, 70]);
   }
   function smokeAt(x, z) { burst('smoke', 7, [x, 1.0, z + 0.1], true); }
   function doWarp(x, z) {
@@ -488,15 +489,15 @@ function main() {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'card' + (d.boss ? ' boss' : '');
       let stars = ''; for (let k = 0; k < 5; k++) stars += k < d.speed ? '★' : '<i>★</i>';
       const bst = best[d.id] ? '最高 ' + best[d.id] + '発' : 'まだ殴ってない';
-      const txt = '<div class="nm">' + d.name + '</div><div class="cr"><b>罪状</b>' + d.crime + '</div><div class="kt">' + d.blurb + '</div><div class="row"><span class="spd">すばやさ ' + stars + '</span><span class="best">' + bst + '</span></div>';
+      const txt = '<div class="nm">' + d.name + '</div>' + (d.id === 'boss' && !cleared.boss ? '<div class="key">🔑 ダウンさせると「ひみつの箱」がひらく</div>' : '') + '<div class="cr"><b>罪状</b>' + d.crime + '</div><div class="kt">' + d.blurb + '</div><div class="row"><span class="spd">すばやさ ' + stars + '</span><span class="best">' + bst + '</span></div>';
       b.innerHTML = '<img alt="" src="' + (portraits[i] || '') + '">' + (cleared[d.id] ? '<span class="done">ダウン済</span>' : '') + (d.boss ? '<span class="tag">BOSS</span><div class="txt">' + txt + '</div>' : '<span class="num">' + (i + 1) + '</span>' + txt);
       b.addEventListener('click', function (ev) { b.blur(); SFX.unlock(); SFX.tap(); goFull(ev); tryStart(i); });
       grid.appendChild(b);
     });
     // ひみつの箱(全員を1回ずつダウンさせた人だけ)
-    const n = clearCount(), open = n >= ROOM_I, s = document.createElement('button'); s.type = 'button'; s.className = 'card secret' + (open ? ' open' : '');
+    const open = !!cleared.boss, s = document.createElement('button'); s.type = 'button'; s.className = 'card secret' + (open ? ' open' : '');
     if (open) s.innerHTML = '<img alt="" src="' + (portraits[ROOM_I] || '') + '"><div class="txt"><div class="nm">♡ 殴りたい放題の部屋 ♡</div><div class="kt">画面いっぱいの あの顔を、ただ連打するだけ。ごほうびの部屋だよ。</div><div class="row"><span class="best">' + (best.room ? '最高 ' + best.room + '発' : 'さあ、どうぞ!') + '</span></div></div>';
-    else s.innerHTML = '<div class="q">？？？</div><div class="txt"><div class="nm">ひみつの箱</div><div class="kt">10人ぜんいんを 1回ずつダウンさせた人だけが、たどりつける おへや だよ ♡</div><div class="row"><span class="best">いま ' + n + ' / ' + ROOM_I + ' 人</span></div></div>';
+    else s.innerHTML = '<div class="q">？？？</div><div class="txt"><div class="nm">ひみつの箱</div><div class="kt">ボスの「工場の女帝 イヤミ田さん」を 1回ダウンさせた人だけが、たどりつける おへや だよ ♡</div><div class="row"><span class="best">ボスを たくさん殴って ダウンさせてね</span></div></div>';
     s.addEventListener('click', function (ev) { s.blur(); SFX.unlock(); if (open) { SFX.tap(); goFull(ev); tryStart(ROOM_I); } else { SFX.miss(); s.classList.remove('no'); void s.offsetWidth; s.classList.add('no'); } });
     grid.appendChild(s);
   }
@@ -537,7 +538,7 @@ function main() {
     $('resRank').textContent = d.room ? (r < 0.5 ? 'ちょっとスッキリ' : r < 1 ? 'だいぶスッキリ' : r < 1.3 ? '超スッキリ!' : 'スッキリの神!!') : (r < 0.35 ? 'なでなで級' : r < 0.7 ? 'ビンタ級' : r < 1 ? 'ゲンコツ級' : r < 1.4 ? '鉄拳級' : '鬼神級');
     $('resStats').innerHTML = (d.room ? 'たんこぶタワー ' + (S.R.tower.length ? S.R.tower.length + 1 : S.R.lv >= 6 ? 1 : 0) + '段' : 'ダウンさせた回数 ' + S.downs + '回') + ' / 最大 ' + S.maxCombo + 'コンボ' + (S.spCount ? ' / 必殺 ' + S.spCount + '回' : '') + '<br>最高 ' + (best[d.id] || 0) + '発';
     show('resNew', isNew && S.hits > 0); $('resFace').src = portraits[S.ci] || ''; $('resByeTxt').textContent = '「' + d.bye + '」';
-    const n = clearCount(); $('resUnlock').textContent = (!d.room && n >= ROOM_I && S.downs > 0) ? '♡ ひみつの箱が ひらいているよ ♡' : (!d.room && n < ROOM_I) ? 'ひみつの箱まで あと ' + (ROOM_I - n) + ' 人(1回ずつダウンさせよう)' : '';
+    $('resUnlock').textContent = d.room ? '' : cleared.boss ? '♡ ひみつの箱が ひらいているよ(ボスの下を見てね)♡' : d.id === 'boss' ? 'おしい! ボスを1回ダウンさせると、ひみつの箱が ひらくよ' : 'ボスのイヤミ田さんを ダウンさせると、ひみつの箱が ひらくよ';
     show('hud', false); show('result', true); S.state = 'result'; S.plays++;
     if (isNew) SFX.cheer();
   }

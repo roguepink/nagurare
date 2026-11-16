@@ -113,6 +113,7 @@
   .card .row { flex-wrap: wrap; }
   .card .cr { font-size: 10.5px; font-weight: 800; padding: 3px 8px 0; line-height: 1.35; color: #b71c1c; }
   .card .cr b { background: #b71c1c; color: #fff; border-radius: 4px; padding: 0 4px; margin-right: 4px; font-size: 9.5px; }
+  .card .key { font-size: 12px; font-weight: 900; color: #ffe14a; padding: 3px 8px 0; line-height: 1.35; }
   .card.boss .cr { color: #ffb0b0; font-size: 12px; }
   .done { position: absolute; left: 6px; bottom: auto; top: 34px; background: #2e7d32; color: #fff; font-size: 10px; font-weight: 900; padding: 1px 7px; border-radius: 999px; border: 2px solid var(--ink); transform: rotate(-8deg); }
   .card.boss .done { top: auto; bottom: 6px; }
@@ -247,7 +248,7 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
 <script>
   // はじめの画面(Google Play 風: インストール / このまま遊ぶ)。install.js が出す。ホーム画面から開いたときは出ない
   window.INSTALL_GATE = { id: 'nagurare', name: '殴られ屋', icon: 'icon-192.png', tagline: '1分間、殴りまくる スッキリ3Dゲーム', desc: '1分間、とにかく殴りまくれ!よけるのがうまい10人の「殴られ屋」を、タップでボコボコにするスッキリ3Dゲーム。',
-    points: ['相手は嫌なやつ10人。動きも、倒れ方も、ぜんぶ違う', '殴るほど顔がはれて、たんこぶだらけに', '全員ダウンさせると ひみつの部屋がひらく'], shots: ['shots/1.jpg', 'shots/2.jpg', 'shots/3.jpg', 'shots/4.jpg'], badges: ['無料', '広告なし', '登録なし'] };
+    points: ['相手は嫌なやつ10人。動きも、倒れ方も、ぜんぶ違う', '殴るほど顔がはれて、たんこぶだらけに', 'ボスをダウンさせると ひみつの部屋がひらく'], shots: ['shots/1.jpg', 'shots/2.jpg', 'shots/3.jpg', 'shots/4.jpg'], badges: ['無料', '広告なし', '登録なし'] };
 </script>
 <script src="install.js"></script>
 </body>
