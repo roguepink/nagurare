@@ -278,7 +278,7 @@ const BOSS_OUT = { top: 0xf5f9fa, leg: 0xf5f9fa, shoe: 0xffffff, belly: 0xf5f9fa
        modes = ふだんの動き方 [名前, 出やすさ, 短い秒, 長い秒, 細かい設定](game.js の motion() を見る)
    tough = ダウンまでの がまん / par = 「鉄拳級」の発数の目安 */
 export const CHARS = [
-  { id: 'tencho', name: 'ぼったくり店長 ゴンゾウ', crime: '水1杯300円。お通し代3000円。', stage: 'shokudo', speed: 1, voice: 95, par: 200,
+  { id: 'tencho', name: 'ぼったくり店長 ゴンゾウ', crime: '水1杯300円。お通し代3000円。', stage: 'shokudo', speed: 1, voice: 95, par: 230, full: 290,
     blurb: '太っていて動けない。殴られ放題!', h: 1.0, w: 1.75, belly: 1.2, headS: 1.12, legW: 1.5, armW: 1.5, jig: 2.6,
     out: { top: 0xe9e4d4, leg: 0x2f3e63, shoe: 0x3a2a20, belly: 0xe9e4d4 },
     face: { skin: '#e3b088', eye: 'white', erx: 13, ery: 9, pupil: 5, lid: 0.45, slant: 0.7, look: [0, 2], white: '#fff6d8', brow: 0.95, browW: 9, mouth: 'gold', smugMouth: 'bero', vein: 1, ex: 34,
@@ -312,7 +312,7 @@ export const CHARS = [
       ov.arms = 1 - d;
     } },
 
-  { id: 'wakazo', name: 'イキリ若造 レン', crime: '人を「ザコ」と呼び、動画でさらす。', stage: 'konbini', speed: 2, voice: 190, par: 170,
+  { id: 'wakazo', name: 'イキリ若造 レン', crime: '人を「ザコ」と呼び、動画でさらす。', stage: 'konbini', speed: 2, voice: 190, par: 210, full: 270,
     blurb: 'ヘラヘラ歩き回って あおってくる。', h: 1.0, w: 0.95, headS: 1.0,
     out: { top: 0x7a3fd0, leg: 0x16161c, shoe: 0xf2f2f2 },
     face: { skin: '#f6d3b3', eye: 'white', lid: 0.45, slant: 0.6, pupil: 6, look: [0, 3], bags: 1, brow: 0.95, browW: 4, mouth: 'sneer', smugMouth: 'bero', browCol: '#8a6a20',
@@ -345,7 +345,7 @@ export const CHARS = [
       if (d > 0) { ov.y = Math.sin(d * PI) * 0.3; once(st, 'e', true, function () { fx.say('…今の、ナシで'); }); }
     } },
 
-  { id: 'oyaji', name: 'ガミガミおやじ 源さん', crime: '近所じゅうに どなり散らす。', stage: 'washitsu', speed: 2, voice: 120, par: 180,
+  { id: 'oyaji', name: 'ガミガミおやじ 源さん', crime: '近所じゅうに どなり散らす。', stage: 'washitsu', speed: 2, voice: 120, par: 220, full: 280,
     blurb: 'ずんずん近づいて どなり、すぐ下がる。', h: 0.93, w: 1.12, belly: 0.5, headS: 1.05,
     out: { top: 0xf2f0e6, leg: 0xcfd9de, shoe: 0x7a5230, belly: 0xc98f62, sleeve: 0xf2f0e6, fore: 0xeab98f },
     face: { gentle: 1, skin: '#e9a888', eye: 'white', erx: 12, ery: 9, pupil: 4.5, lid: 0.32, slant: 0.9, blood: 1, brow: 1.2, browW: 9, browCol: '#8a8a8a', mouth: 'yell', smugMouth: 'sneer', vein: 1, ey: 112,
@@ -378,7 +378,7 @@ export const CHARS = [
       once(st, 'f', d > 0.9, function () { fx.say('…今のは 足がすべっただけじゃ'); });
     } },
 
-  { id: 'bucho', name: 'いじわる部長', crime: '手柄は自分、ミスは部下。残業代は出さない。', stage: 'office', speed: 3, voice: 135, par: 150,
+  { id: 'bucho', name: 'いじわる部長', crime: '手柄は自分、ミスは部下。残業代は出さない。', stage: 'office', speed: 3, voice: 135, par: 165, full: 215,
     blurb: '机の間を スッ、スッと すべるように動く。', h: 1.03, w: 1.05, belly: 0.25, headS: 1.0,
     out: { top: 0x1f2a48, leg: 0x1f2a48, shoe: 0x101010 },
     face: { skin: '#f0c9a4', eye: 'white', erx: 14, ery: 8, pupil: 4.5, lid: 0.42, slant: 0.6, look: [0, 2], brow: 0.7, mouth: 'sneer', smugMouth: 'grin', ey: 112,
@@ -415,7 +415,7 @@ export const CHARS = [
       once(st, 'e', d > 0, function () { fx.say('…労災、おりるかな'); });
     } },
 
-  { id: 'ponta', name: 'やさぐれ着ぐるみ ぽん太', crime: '子どもに舌打ち。風船も写真も有料。', stage: 'yuenchi', speed: 3, voice: 240, par: 130,
+  { id: 'ponta', name: 'やさぐれ着ぐるみ ぽん太', crime: '子どもに舌打ち。風船も写真も有料。', stage: 'yuenchi', speed: 3, voice: 240, par: 160, full: 205,
     blurb: '画面じゅうを ぴょんぴょん はね回る。', h: 0.86, w: 1.55, belly: 1.0, headS: 1.85, legW: 1.5, armW: 1.4, noEars: 1, jig: 1.6, cheekCol: 0x9a5a22, lidCol3: 0x6a3a5a,
     out: { top: 0xa9631f, leg: 0xa9631f, shoe: 0x7a4315, belly: 0xf3e3c4, hand: 0x7a4315, handR: 0.085 },
     face: { skin: '#a9631f', custom: function (x, e, cx, ey, lv) {
@@ -468,7 +468,7 @@ export const CHARS = [
       if (c > 0) { ov.rz = Math.sin(c * PI * 2) * 0.08; once(st, 'e', c > 0.3, function () { fx.say('…見た?'); }); }
     } },
 
-  { id: 'oji', name: 'ナルシスト王子 カズヤ', crime: '人の顔を見て 鼻で笑う。', stage: 'neon', speed: 3, voice: 170, par: 170,
+  { id: 'oji', name: 'ナルシスト王子 カズヤ', crime: '人の顔を見て 鼻で笑う。', stage: 'neon', speed: 3, voice: 170, par: 200, full: 260,
     blurb: 'くるくる回りながら 8の字に動く。顔を殴ると…?', h: 1.08, w: 0.95, headS: 0.98,
     out: { top: 0xf8f8ff, leg: 0xf8f8ff, shoe: 0xeeeeee },
     face: { skin: '#f8dcc0', eye: 'white', erx: 17, ery: 13, pupil: 8, iris: '#3f7fd8', lash: 1, lid: 0.4, slant: 0.25, look: [0, 4], brow: 0.35, browW: 4, browCol: '#b8902e', mouth: 'smirk', smugMouth: 'grin',
@@ -500,7 +500,7 @@ export const CHARS = [
       if (d > 0) { ov.y = Math.sin(d * PI) * 0.25; once(st, 'e', true, function () { fx.text('キラッ☆'); fx.snd('twinkle'); }); }
     } },
 
-  { id: 'roshi', name: 'インチキ仙人', crime: 'ニセの壺を売りつけ、修行料は前払い。', stage: 'chikurin', speed: 4, voice: 150, par: 150,
+  { id: 'roshi', name: 'インチキ仙人', crime: 'ニセの壺を売りつけ、修行料は前払い。', stage: 'chikurin', speed: 4, voice: 150, par: 170, full: 215,
     blurb: '酔っぱらいの千鳥足。のけぞって 読めない!', h: 0.88, w: 0.92, headS: 1.08,
     out: { top: 0xb3261e, leg: 0x1c1c1c, shoe: 0x111111 },
     face: { gentle: 1, skin: '#eab08a', eye: 'white', erx: 14, ery: 10, pupil: 4, lid: 0.5, slant: 0.5, look: [3, 3], white: '#fff3c8', wink: -1, browCol: '#ffffff', browW: 9, brow: 0.5, browY: 22, mouth: 'fang', smugMouth: 'bero',
@@ -533,7 +533,7 @@ export const CHARS = [
       if (c > 0) { ov.crouch = 0.36 * (1 - ease.io(seg(c, 0.5, 1))); ov.rz = Math.sin(c * 14) * 0.12 * (1 - c); once(st, 'e', c > 0.4, function () { fx.say('ひっく…いい酔いざましじゃ'); }); }
     } },
 
-  { id: 'kage', name: '忍者 カゲ丸', crime: '人を見下して「ザコ」と笑う。', stage: 'shiro', speed: 4, voice: 160, par: 110,
+  { id: 'kage', name: '忍者 カゲ丸', crime: '人を見下して「ザコ」と笑う。', stage: 'shiro', speed: 4, voice: 160, par: 145, full: 185,
     blurb: 'ドロンと消えて 屋根のあちこちに出る。', h: 0.98, w: 0.95, headS: 1.0, noEars: 1, cheekCol: 0x1b2440,
     out: { top: 0x1b2440, leg: 0x1b2440, shoe: 0x0e1322, hand: 0x1b2440 },
     face: { skin: '#f0c9a4', eye: 'white', erx: 16, ery: 10, pupil: 5, lid: 0.36, slant: 0.9, look: [0, 2], brow: 1.1, browW: 7, noMouth: 1, noNose: 1, masked: 1, capped: 1,
@@ -569,7 +569,7 @@ export const CHARS = [
       if (d > 0) ov.crouch = 0.3 * (1 - d);
     } },
 
-  { id: 'tetsu', name: '口だけチャンプ 鉄', crime: '自称・元チャンプ。客を「シロウト」とバカにする。', stage: 'ring', speed: 5, voice: 110, par: 100,
+  { id: 'tetsu', name: '口だけチャンプ 鉄', crime: '自称・元チャンプ。客を「シロウト」とバカにする。', stage: 'ring', speed: 5, voice: 110, par: 165, full: 210,
     blurb: '本職の殴られ屋。頭をふり続けて 当たらない!', h: 1.04, w: 1.12, headS: 0.98, armW: 1.25,
     out: { top: 0xf4f4f4, leg: 0xe2b48c, shoe: 0xffffff, shorts: 0x1c4fd0, sleeve: 0xe2b48c, hand: 0x1c4fd0, handR: 0.092, boot: 1 },
     face: { skin: '#e2b48c', eye: 'white', erx: 14, ery: 10, pupil: 6, lid: 0.4, slant: 0.5, look: [0, 2], brow: 0.8, browW: 9, mouth: 'sneer', smugMouth: 'bero',
@@ -600,7 +600,7 @@ export const CHARS = [
       if (d > 0) { ov.y = Math.sin(d * PI) * 0.6; once(st, 'e', true, function () { fx.say('まだまだぁ!'); fx.snd('cheer'); }); }
     } },
 
-  { id: 'boss', name: '工場の女帝 イヤミ田さん', crime: '嫌味・告げ口・シフトの勝手な書きかえ。', stage: 'kojo', speed: 5, voice: 260, par: 95, boss: 1, cheekCol: 0xfdfefe,
+  { id: 'boss', name: '工場の女帝 イヤミ田さん', crime: '嫌味・告げ口・シフトの勝手な書きかえ。', stage: 'kojo', speed: 5, voice: 260, par: 120, full: 155, boss: 1, cheekCol: 0xfdfefe,
     blurb: '【ボス】消える・はねる・しゃがむ。全部やる。目がいちばん嫌。', h: 0.9, w: 1.3, belly: 0.55, headS: 1.12, legW: 1.2, armW: 1.15,
     out: BOSS_OUT,
     face: { gentle: 1, skin: '#e9bf9e', eye: 'white', erx: 19, ery: 12, pupil: 5.2, iris: '#241208', lid: 0.46, slant: 0.95, look: [-4, 4], lidCol: '#9a6fa8', shadow: 'rgba(120,70,150,.5)', lash: 1, bags: 1,
@@ -642,7 +642,7 @@ export const CHARS = [
     } },
 
   /* ひみつの部屋: 画面いっぱいの顔。動かない。連打するだけ。全員を1回ずつダウンさせると入れる */
-  { id: 'room', room: 1, name: '殴りたい放題の部屋', crime: 'ぜんぶ。', stage: 'room', speed: 0, voice: 280, par: 380, boss: 1, hires: 3,
+  { id: 'room', room: 1, name: '殴りたい放題の部屋', crime: 'ぜんぶ。', stage: 'room', speed: 0, voice: 280, par: 380, full: 320, boss: 1, hires: 3,
     blurb: '画面いっぱいの あの顔。連打するだけ!', h: 0.9, w: 1.3, belly: 0.55, headS: 1.12, legW: 1.2, armW: 1.15,
     out: BOSS_OUT, dmgAt: [10, 30, 60, 100, 150, 210],
     face: { gentle: 1, skin: '#e9bf9e', eye: 'white', erx: 21, ery: 13, pupil: 5, iris: '#241208', lid: 0.52, slant: 1.05, look: [0, 5], lidCol: '#8a5fa0', shadow: 'rgba(110,50,150,.6)', lash: 1, bags: 1, blood: 1,
