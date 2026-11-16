@@ -30,7 +30,7 @@ S.shokudo = function (g) {
   ['しょうゆ', 'みそ', 'とんこつ', 'ギョーザ', 'チャーハン', 'ビール'].forEach(function (m, i) { sign(g, vtext(m), { w: 0.24, h: 0.9, bg: '#fff8e1', fg: i == 3 ? '#c62828' : '#222', p: [-2.3 + i * 0.5 + (i > 2 ? 2.1 : 0), 3.25, -4.12] }); });
   for (const s of [-1, 1]) { t.S(0xff5a3a, [s * 1.45, 2.45, -1.2], [0.2, 0.26, 0.2], null, { glow: 0xcc2200 }); t.B(0x222222, [s * 1.45, 2.74, -1.2], [0.14, 0.04, 0.14]); t.B(0x222222, [s * 1.45, 2.17, -1.2], [0.14, 0.04, 0.14]); }
   const steam = []; for (let i = 0; i < 5; i++) steam.push(t.S(0xffffff, [-0.9 + rnd(i) * 0.2, 1.7, -3.5], 0.1, null, { a: 0.35 }));
-  return { bg: 0xf3e6c8, fog: [0xf3e6c8, 8, 30], hemi: [0xfff4e0, 0x8a6a4a, 1.25], sun: [0xfff0d8, 1.4, [1, 3, 3]],
+  return { bnd: { zMin: -1.3, xMax: 1.0 }, bg: 0xf3e6c8, fog: [0xf3e6c8, 8, 30], hemi: [0xfff4e0, 0x8a6a4a, 1.25], sun: [0xfff0d8, 1.4, [1, 3, 3]],
     update: function (T) { steam.forEach(function (s, i) { const k = (T * 0.4 + i * 0.2) % 1; s.position.y = 1.6 + k * 1.0; s.scale.setScalar(0.08 + k * 0.14); s.material.opacity = 0.35 * (1 - k); }); } };
 };
 
@@ -54,7 +54,7 @@ S.konbini = function (g) {
   for (let i = 0; i < 50; i++) t.S(0xffffff, [(rnd(i) - 0.5) * 30, 5 + rnd(i + 9) * 8, -14], 0.04, null, { basic: 1 });
   t.B(0x161a2a, [-6, 3, -9], [4, 8, 3]); t.B(0x161a2a, [6.5, 4, -10], [5, 10, 3]);
   for (let i = 0; i < 12; i++) t.B(0xffe082, [5 + (i % 3) * 1.0, 2 + Math.floor(i / 3) * 1.4, -8.4], [0.5, 0.6, 0.05], null, { basic: 1 });
-  return { bg: 0x0a1030, fog: [0x0a1030, 12, 40], hemi: [0x8fa8ff, 0x20242e, 0.9], sun: [0xeaf4ff, 1.5, [0, 2.5, 2]],
+  return { bnd: { zMin: -2.2, xMax: 1.3 }, bg: 0x0a1030, fog: [0x0a1030, 12, 40], hemi: [0x8fa8ff, 0x20242e, 0.9], sun: [0xeaf4ff, 1.5, [0, 2.5, 2]],
     update: function (T) { lamp.material.color.setScalar(Math.sin(T * 31) > 0.96 ? 0.5 : 1); } };
 };
 
@@ -74,7 +74,7 @@ S.washitsu = function (g) {
   // 古いテレビ
   t.B(0x4a3320, [1.75, 0.3, -3.3], [0.9, 0.6, 0.5]); t.B(0x3e2c1c, [1.75, 0.9, -3.3], [0.75, 0.6, 0.5]); t.B(0x9fb7a6, [1.72, 0.92, -3.04], [0.5, 0.4, 0.02], null, { basic: 1 });
   t.B(0x6a4526, [0, 3.9, -1], [16, 0.12, 0.2]);
-  return { bg: 0xd9c9a3, fog: [0xd9c9a3, 9, 30], hemi: [0xfff8e6, 0x8a7a55, 1.2], sun: [0xfff3da, 1.3, [-1, 3, 3]] };
+  return { bnd: { zMin: -2.4, xMax: 0.95 }, bg: 0xd9c9a3, fog: [0xd9c9a3, 9, 30], hemi: [0xfff8e6, 0x8a7a55, 1.2], sun: [0xfff3da, 1.3, [-1, 3, 3]] };
 };
 
 /* 4. オフィス */
@@ -95,7 +95,7 @@ S.office = function (g) {
   sign(g, '残業は\n気合い', { w: 0.7, h: 0.7, bg: '#fff59d', fg: '#333', p: [2.2, 2.1, -9.3] });
   t.C(0xffffff, [-2.2, 2.6, -9.35], [0.26, 0.03, 0.26], [PI / 2, 0, 0]); t.B(0x222222, [-2.2, 2.68, -9.3], [0.02, 0.18, 0.01]); t.B(0x222222, [-2.13, 2.6, -9.3], [0.14, 0.02, 0.01]);
   t.B(0xdfe3e6, [-3.6, 0.6, -8.6], [0.9, 1.2, 0.8]); t.C(0x8d6e63, [3.6, 0.25, -8.6], [0.22, 0.5, 0.22]); t.S(0x388e3c, [3.6, 1.05, -8.6], [0.45, 0.7, 0.45]);
-  return { bg: 0xe9edf1, fog: [0xe9edf1, 12, 40], hemi: [0xffffff, 0x8a94a0, 1.3], sun: [0xffffff, 1.2, [0, 3, 3]] };
+  return { bnd: { zMin: -5.5, xMax: 0.72 }, bg: 0xe9edf1, fog: [0xe9edf1, 12, 40], hemi: [0xffffff, 0x8a94a0, 1.3], sun: [0xffffff, 1.2, [0, 3, 3]] };
 };
 
 /* 5. 遊園地 */
@@ -116,7 +116,7 @@ S.yuenchi = function (g) {
   for (let i = 0; i < 7; i++) { const c = grp(g, -9 + i * 3.2 + rnd(i) * 2, 7 + rnd(i + 3) * 3, -20); for (let j = 0; j < 3; j++) add(c, G.sph, 0xffffff, [j * 0.8 - 0.8, rnd(i * 3 + j) * 0.3, 0], [0.9, 0.5, 0.5], null, { basic: 1 }); }
   // メリーゴーラウンドの柵
   for (let i = -6; i <= 6; i++) t.C(0xffffff, [i * 0.7, 0.45, -7.5], [0.03, 0.9, 0.03]); t.B(0xff8fb0, [0, 0.9, -7.5], [9, 0.06, 0.06]);
-  return { bg: 0x7ec8f0, fog: [0xbfe6fa, 18, 60], hemi: [0xffffff, 0xf2d9b8, 1.35], sun: [0xfff6dc, 1.6, [2, 4, 3]],
+  return { bnd: { zMin: -3.2, xMax: 1.25 }, bg: 0x7ec8f0, fog: [0xbfe6fa, 18, 60], hemi: [0xffffff, 0xf2d9b8, 1.35], sun: [0xfff6dc, 1.6, [2, 4, 3]],
     update: function (T) { wheel.rotation.z = T * 0.12; gond.forEach(function (b) { b.rotation.z = -wheel.rotation.z; }); bal.forEach(function (b, i) { b.position.y = 2.2 + Math.sin(T * 1.3 + i) * 0.06; }); } };
 };
 
@@ -136,7 +136,7 @@ S.neon = function (g) {
   // 花輪(祝)
   t.C(0xffffff, [1.75, 0.8, -2.2], [0.02, 1.6, 0.02]); t.C(0xff80ab, [1.75, 1.75, -2.2], [0.42, 0.08, 0.42], [PI / 2, 0, 0]); t.C(0xffffff, [1.75, 1.75, -2.17], [0.26, 0.08, 0.26], [PI / 2, 0, 0]);
   sign(g, '祝', { w: 0.3, h: 0.3, bg: '#ffffff', fg: '#d81b60', p: [1.75, 1.75, -2.12] });
-  return { bg: 0x0b0618, fog: [0x1a0b2e, 9, 34], hemi: [0xff8fd0, 0x2a1840, 1.05], sun: [0xbfe8ff, 1.5, [-1, 3, 3]],
+  return { bnd: { zMin: -3.2, xMax: 1.4 }, bg: 0x0b0618, fog: [0x1a0b2e, 9, 34], hemi: [0xff8fd0, 0x2a1840, 1.05], sun: [0xbfe8ff, 1.5, [-1, 3, 3]],
     update: function (T) { neon.forEach(function (n, i) { n.material.color.setScalar(Math.sin(T * (7 + i * 3) + i) > 0.93 ? 0.35 : 1); }); } };
 };
 
@@ -157,7 +157,7 @@ S.chikurin = function (g) {
   t.C(0x9e9e9e, [1.45, 0.4, -2.3], [0.09, 0.8, 0.09]); t.B(0x9e9e9e, [1.45, 0.95, -2.3], [0.3, 0.26, 0.3]); t.B(0xffe082, [1.45, 0.95, -2.14], [0.16, 0.14, 0.02], null, { basic: 1 }); t.K(0x8a8a8a, [1.45, 1.22, -2.3], [0.3, 0.26, 0.3]); t.B(0x8a8a8a, [1.45, 0.05, -2.3], [0.34, 0.1, 0.34]);
   [[-1.4, -1.9, 0.3], [-1.75, -2.3, 0.2], [2.2, -3.4, 0.4]].forEach(function (p) { t.S(0x8d8d85, [p[0], p[2] * 0.5, p[1]], [p[2] * 1.3, p[2], p[2]]); });
   for (let i = 0; i < 6; i++) t.S(0xffffff, [(rnd(i) - 0.5) * 12, 0.6 + rnd(i + 5), -5 - rnd(i + 2) * 6], [3, 0.5, 1], null, { basic: 1, a: 0.22 });
-  return { bg: 0xcfe8c8, fog: [0xcfe8c8, 5, 20], hemi: [0xf4ffe8, 0x5a6a3a, 1.3], sun: [0xfffbe0, 1.3, [1, 4, 2]],
+  return { bnd: { zMin: -4.5, xMax: 0.8 }, bg: 0xcfe8c8, fog: [0xcfe8c8, 5, 20], hemi: [0xf4ffe8, 0x5a6a3a, 1.3], sun: [0xfffbe0, 1.3, [1, 4, 2]],
     update: function (T) { bam.forEach(function (b, i) { b.rotation.z = Math.sin(T * 0.8 + i) * 0.025; }); } };
 };
 
@@ -175,7 +175,7 @@ S.shiro = function (g) {
   for (let i = 0; i < 90; i++) t.S(0xffffff, [(rnd(i) - 0.5) * 44, 1 + rnd(i + 9) * 16, -24], 0.05 + rnd(i + 2) * 0.05, null, { basic: 1 });
   const cl = []; for (let i = 0; i < 4; i++) cl.push(t.S(0x39466a, [-8 + i * 5, 3.4 + rnd(i) * 3, -20], [3.5, 0.4, 1], null, { basic: 1, a: 0.7 }));
   for (let i = 0; i < 9; i++) t.B(0x101622, [-12 + i * 3 + rnd(i), -0.8 + rnd(i + 4) * 0.8, -14], [2.2, 1.6, 2]);
-  return { bg: 0x0a0f2a, fog: [0x0a0f2a, 16, 60], hemi: [0x9fb4ff, 0x1c2233, 1.0], sun: [0xdfe8ff, 1.5, [1, 3, 3]],
+  return { bnd: { zMin: -1.9, xMax: 1.4 }, bg: 0x0a0f2a, fog: [0x0a0f2a, 16, 60], hemi: [0x9fb4ff, 0x1c2233, 1.0], sun: [0xdfe8ff, 1.5, [1, 3, 3]],
     update: function (T) { cl.forEach(function (m, i) { m.position.x = ((T * 0.25 + i * 6) % 24) - 12; }); } };
 };
 
@@ -192,7 +192,7 @@ S.ring = function (g) {
   for (const s of [-1, 0, 1]) { t.B(0x222222, [s * 3, 6.4, -5], [0.5, 0.3, 0.5]); t.K(0xfff6d0, [s * 2.2, 3.3, -3.5], [1.6, 6.4, 1.6], [0, 0, s * 0.2], { basic: 1, a: 0.05 }); t.S(0xffffff, [s * 3, 6.2, -5], 0.2, null, { basic: 1 }); }
   sign(g, '殴られ屋\n1分1000円', { w: 2.6, h: 1.0, bg: '#111', fg: '#ffd54f', border: '#ffd54f', p: [0, 4.3, -6], glow: 1 });
   t.B(0x5d4037, [-2.6, 0.25, -3.3], [0.34, 0.5, 0.34]); t.C(0x90a4ae, [2.7, 0.2, -3.3], [0.17, 0.4, 0.17]);
-  return { bg: 0x0c0c14, fog: [0x0c0c14, 12, 40], hemi: [0xffffff, 0x2a3a66, 1.1], sun: [0xfff8e8, 1.9, [0, 5, 2]],
+  return { bnd: { zMin: -3.2, xMax: 2.6 }, bg: 0x0c0c14, fog: [0x0c0c14, 12, 40], hemi: [0xffffff, 0x2a3a66, 1.1], sun: [0xfff8e8, 1.9, [0, 5, 2]],
     update: function (T) { ropes[0].position.z = -3.9 + Math.sin(T * 3) * 0.01; } };
 };
 
@@ -227,8 +227,22 @@ S.kojo = function (g) {
   // ビニールのれんの出入り口
   t.B(0x455a64, [-4.2, 1.2, -6.1], [1.6, 2.4, 0.08]); for (let i = 0; i < 8; i++) t.B(0xc8f0ff, [-4.85 + i * 0.19, 1.15, -6.02], [0.17, 2.2, 0.01], null, { a: 0.45 });
   t.C(0xffffff, [4.0, 3.0, -6.12], [0.3, 0.03, 0.3], [PI / 2, 0, 0]); t.B(0x222222, [4.0, 3.1, -6.08], [0.02, 0.2, 0.01]); t.B(0x222222, [4.08, 3.0, -6.08], [0.16, 0.02, 0.01]);
-  return { bg: 0xeef6f8, fog: [0xeef6f8, 10, 34], hemi: [0xffffff, 0x9cc9a8, 1.4], sun: [0xffffff, 1.15, [0, 4, 3]],
+  return { bnd: { zMin: -1.45, xMax: 1.3 }, bg: 0xeef6f8, fog: [0xeef6f8, 10, 34], hemi: [0xffffff, 0x9cc9a8, 1.4], sun: [0xffffff, 1.15, [0, 4, 3]],
     update: function (T) { veg.forEach(function (v) { const k = (v.userData.o + T * 0.09) % 1; v.position.z = -4.3 + k * 4.7; v.position.y = 0.9 + Math.abs(Math.sin(T * 9 + v.userData.o * 40)) * 0.006; }); } };
+};
+
+/* ひみつの部屋(殴りたい放題)。顔が画面いっぱいなので、うしろは ごほうびらしく きらきらに */
+S.room = function (g) {
+  const t = tools(g);
+  t.floor(function (x) { x.fillStyle = '#3a1140'; x.fillRect(0, 0, 128, 128); x.fillStyle = '#4a1a55'; x.fillRect(0, 0, 64, 64); x.fillRect(64, 64, 64, 64); }, [30, 30]);
+  t.B(0x2a0c36, [0, 3, -3.2], [14, 8, 0.2]);
+  sign(g, '殴りたい放題', { w: 3.4, h: 0.7, bg: '#2a0c36', fg: '#ff7ad1', border: '#ff7ad1', p: [0, 2.75, -3.05], glow: 1 });
+  for (const s of [-1, 1]) { t.K(0xfff0a0, [s * 1.3, 2.4, -1.4], [1.1, 4.4, 1.1], [0, 0, s * 0.35], { basic: 1, a: 0.07 }); t.S(0xffffff, [s * 2.0, 4.4, -1.4], 0.16, null, { basic: 1 }); }
+  const hearts = [];
+  for (let i = 0; i < 26; i++) { const c = [0xff7ad1, 0xffe14a, 0x7ad0ff, 0xb388ff][i % 4], m = add(g, G.sph, c, [(rnd(i) - 0.5) * 5, rnd(i + 7) * 4, -0.8 - rnd(i + 3) * 2.2], 0.03 + rnd(i + 5) * 0.05, null, { basic: 1 }); m.userData.o = rnd(i + 11); hearts.push(m); }
+  for (let i = 0; i < 9; i++) t.B([0xff7ad1, 0xffe14a, 0x7ad0ff][i % 3], [-2 + i * 0.5, 3.4 - Math.sin(i / 8 * PI) * 0.3, -3.0], [0.2, 0.26, 0.02], [0, 0, 0.3], { basic: 1 });
+  return { bnd: { zMin: 0, xMax: 0 }, bg: 0x2a0c36, fog: [0x2a0c36, 6, 20], hemi: [0xffffff, 0x8a5a8a, 1.3], sun: [0xfff4e8, 1.5, [0.6, 1.2, 3]],
+    update: function (T) { hearts.forEach(function (m, i) { m.position.y = ((m.userData.o * 4 + T * (0.25 + (i % 5) * 0.06)) % 4.2); m.position.x += Math.sin(T * 1.3 + i) * 0.0015; }); } };
 };
 
 export function buildStage(id) {
