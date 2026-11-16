@@ -23,8 +23,8 @@ def main():
                 for li, lv in enumerate(lvs):
                     page.evaluate(f"(()=>{{const g=__g,S=g.S;g.{'prog' if a.prog else 'lv'}({lv});S.ai.tauntT=99;S.ai.smug=0;S.sayT=0.01;S.ai.mvDef=null;S.ai.mv={{name:'close',t:0,dur:99,p:{{}}}};S.ai.hitT=0;}})()"); time.sleep(1.3)
                     hs = page.evaluate("__g.S.headScr"); f = ROOT / f"{a.out}-tmp.png"; f.parent.mkdir(exist_ok=True); page.screenshot(path=str(f))
-                    im = Image.open(f).convert("RGB"); r = hs[2] * (1.2 if c == 11 else 2.0) * 3; x, y = hs[0] * 3, hs[1] * 3 - hs[2] * (0.3 if c == 11 else 1.1)
-                    box = (0, 300, im.width, 300 + im.width) if c == 11 else (int(x - r), int(y - r), int(x + r), int(y + r))
+                    im = Image.open(f).convert("RGB"); r = hs[2] * (1.2 if c == 12 else 2.0) * 3; x, y = hs[0] * 3, hs[1] * 3 - hs[2] * (0.3 if c == 12 else 1.1)
+                    box = (0, 300, im.width, 300 + im.width) if c == 12 else (int(x - r), int(y - r), int(x + r), int(y + r))
                     sheet.paste(im.crop(box).resize((C, C)), (ci * C, li * C))
                 ctx.close()
             br.close()
