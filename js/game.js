@@ -608,13 +608,15 @@ function main() {
     if (on && (S.state === 'play' || S.state === 'ready')) { S.prev = S.state; S.state = 'pause'; show('pause', true); SFX.bgm(false); }
     else if (!on && S.state === 'pause') { S.state = S.prev; show('pause', false); SFX.bgm(true); }
   }
-  $('btnPause').addEventListener('click', function () { this.blur(); pause(true); });
+  /* 連打の最中(ほかの指が画面にふれている間)でも効くように、ふれた瞬間に動かす(click だと 指が2本のとき起きない) */
+  function press(el, fn) { let last = 0; const h = function (e) { const n = performance.now(); if (n - last < 350) return; last = n; e.preventDefault(); e.stopPropagation(); el.blur(); fn(e); }; el.addEventListener('pointerdown', h); el.addEventListener('click', h); }
+  press($('btnPause'), function () { pause(true); });
   $('btnResume').addEventListener('click', function () { this.blur(); SFX.unlock(); pause(false); });
   $('btnQuit').addEventListener('click', function () { this.blur(); toSelect(); });
   $('btnAgain').addEventListener('click', function (ev) { this.blur(); SFX.unlock(); SFX.tap(); goFull(ev); startGame(S.ci); });
   $('btnBack').addEventListener('click', function () { this.blur(); SFX.tap(); toSelect(); });
   const muteBtn = $('btnMute'); muteBtn.textContent = SFX.muted ? '🔇' : '🔊';
-  muteBtn.addEventListener('click', function () { this.blur(); SFX.unlock(); SFX.setMute(!SFX.muted); muteBtn.textContent = SFX.muted ? '🔇' : '🔊'; });
+  press(muteBtn, function () { SFX.unlock(); SFX.setMute(!SFX.muted); muteBtn.textContent = SFX.muted ? '🔇' : '🔊'; });
   document.addEventListener('visibilitychange', function () { if (document.hidden) pause(true); });
 
   let lastPtr = [0, 0];

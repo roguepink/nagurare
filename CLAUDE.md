@@ -57,5 +57,8 @@ python3 tools/sheet.py --hash "down" --wait 1.45 --frames 0.25,0.75,1.25,1.75,2.
 - **ひみつの部屋**: 気分が 2〜3秒ごとに変わる(`def.moods` = nasty lie provoke angry irk sorry cry fake。表情は `MOOD_EX`)。13〜19秒ごとに **殴るふり**(`updateFake`: 向こうのこぶしが画面いっぱい →「いまの、ビビったでしょ?」)。顔は一回り大きく
 - 並びが変わった: `c=10` NOBU / `c=11` ボス / `c=12` ひみつの部屋
 
+## 落とし穴(2026-11-17 ノブさんの実機で発覚)
+- **遊んでいる最中のボタンは `click` で作らない。** 連打中は指が1本ふれたままなので、別の指でボタンを押しても click が起きない(一時停止・音ボタンが効かなかった)。`press(el, fn)`(pointerdown で動かす)を使う。確かめるのは `python3 tools/btn_test.py`
+
 ## 公開
 - `main` が GitHub Pages(https://roguepink.github.io/nagurare/)。**`main` に入れる = 公開**。長い直しは別の枝で

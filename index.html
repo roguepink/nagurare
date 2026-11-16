@@ -34,7 +34,8 @@
   /* ---- 遊んでいる間の表示 ---- */
   #hud { position: fixed; inset: 0; pointer-events: none; padding: calc(env(safe-area-inset-top) + 8px) 10px 0; }
   #hudTop { display: flex; align-items: center; gap: 8px; }
-  .ibtn { pointer-events: auto; width: 44px; height: 44px; flex: none; border-radius: 50%; border: 3px solid var(--ink); background: #fff; font-size: 18px; padding: 0; box-shadow: 0 3px 0 var(--ink); }
+  .ibtn { pointer-events: auto; touch-action: none; position: relative; width: 48px; height: 48px; flex: none; border-radius: 50%; border: 3px solid var(--ink); background: #fff; font-size: 18px; padding: 0; box-shadow: 0 3px 0 var(--ink); }
+  .ibtn::after { content: ""; position: absolute; inset: -10px; }   /* 押せる範囲を ひとまわり広く */
   #timeWrap { flex: 1; height: 26px; border: 3px solid var(--ink); border-radius: 999px; background: rgba(20,12,42,.75); position: relative; overflow: hidden; box-shadow: 0 3px 0 var(--ink); }
   #timeBar { position: absolute; inset: 0; transform-origin: left center; background: linear-gradient(90deg, #44e08a, #d6f24a); }
   #timeWrap.hot #timeBar { background: linear-gradient(90deg, #ff3b3b, #ff9a3b); }
@@ -103,6 +104,7 @@
   /* ---- 重なる画面 ---- */
   .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; overflow-y: auto; -webkit-overflow-scrolling: touch;
     padding: calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 22px); background: rgba(16, 9, 36, .8); }
+  .overlay { z-index: 5; }
   .overlay.mid { justify-content: center; gap: 14px; }
   h1.logo { margin: 4px 0 0; font-size: clamp(50px, 17vw, 92px); font-weight: 900; color: var(--yel); line-height: 1.05; transform: rotate(-4deg); text-shadow: 6px 7px 0 var(--red); letter-spacing: .02em; }
   .sub { margin: 10px 0 2px; font-weight: 900; font-size: clamp(15px, 4.6vw, 20px); }
