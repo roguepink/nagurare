@@ -206,6 +206,7 @@ function main() {
   function punch(sx, sy) {
     if (S.state !== 'play' || !S.R) return;
     if (S.sp) { if (S.sp.t > 0.9 && S.sp.t < S.sp.end) spHit(); return; }
+    if (S.fake && S.fake.lock) { const n = performance.now(); if (n - (S.noT || 0) > 220) { S.noT = n; pop(pick(['なぐれない!', 'ガード!', 'とどかない!']), 'miss', sx, sy); SFX.miss(); } S.combo = 0; $('combo').className = 'stroke'; return; }
     let i = sx < W / 2 ? 0 : 1;
     if (gl[i].t >= 0) { if (gl[1 - i].t < 0) i = 1 - i; else i = gl[0].t > gl[1].t ? 0 : 1; }
     if (gl[i].t >= 0 && !gl[i].done) { gl[i].done = true; impact(gl[i]); }
@@ -218,6 +219,7 @@ function main() {
   }
   function impact(g) {
     if (S.state !== 'play' || S.sp) return;
+    if (S.fake && S.fake.lock) return;   // 殴るふりの間は 飛んでいたパンチも 当たらない
     if (S.room) { onHit('head', g); return; }
     const vs = volumes(); let hit = null;
     for (let i = 0; i < vs.length; i++) { const v = vs[i]; if (Math.hypot(g.sx - v.x, g.sy - v.y) < v.r + v.tol) { hit = v; break; } }
@@ -315,19 +317,26 @@ function main() {
   }
 
   /* ---------- ひみつの部屋: 気分がころころ変わる・殴るふりをしてくる ---------- */
-  const fist = grp(scene); fist.visible = false;
-  add(fist, G.sph, 0xff8fb0, [0, 0, 0], [0.1, 0.088, 0.09]);
-  for (let i = 0; i < 4; i++) add(fist, G.sph, 0xffa6c0, [-0.06 + i * 0.04, 0.035, 0.07], 0.031);
-  add(fist, G.sph, 0xff7fa6, [0.085, -0.02, 0.04], [0.035, 0.045, 0.05]);
-  add(fist, G.cyl, 0xa9d8ee, [0, 0, -0.14], [0.075, 0.14, 0.075], [PI / 2, 0, 0]);
-  add(fist, G.cyl, 0xf5f9fa, [0, 0, -0.95], [0.07, 1.5, 0.07], [PI / 2, 0, 0]);
-  fist.traverse(function (m) { if (m.isMesh) m.frustumCulled = false; });
+  const fist = grp(scene); fist.visible = false;   // 飛んでくる 真っ赤なボクシンググローブ(+z が こちら向き)
+  add(fist, G.sph, 0xe21f26, [0, 0, 0], [0.1, 0.11, 0.12]);
+  add(fist, G.sph, 0xc5161d, [0.09, -0.02, -0.01], [0.042, 0.055, 0.07]);
+  add(fist, G.sph, 0xff8a8a, [-0.03, 0.06, 0.07], [0.035, 0.022, 0.04]);
+  add(fist, G.cyl, 0xffffff, [0, 0, -0.13], [0.078, 0.07, 0.078], [PI / 2, 0, 0]);
+  add(fist, G.cyl, 0xe21f26, [0, 0, -0.19], [0.072, 0.05, 0.072], [PI / 2, 0, 0]);
+  const fistArm = add(scene, G.cyl, 0xa9d8ee, [0, 0, 0], [0.05, 1, 0.05]); fistArm.visible = false;
+  [fist, fistArm].forEach(function (o) { o.traverse(function (m) { if (m.isMesh) { m.frustumCulled = false; m.renderOrder = 8; } }); });
+  /* イヤミ田さんの手につける 真っ赤なグローブ(構えるときだけ見える) */
+  function fakeGloves(R) {
+    if (R.acc.fg) return R.acc.fg;
+    R.acc.fg = R.arms.map(function (a) { const g = grp(a.el, 0, -0.3, 0.01); add(g, G.sph, 0xe21f26, [0, 0, 0], [0.085, 0.095, 0.1]); add(g, G.sph, 0xc5161d, [a.s * 0.07, 0, 0.02], [0.035, 0.045, 0.055]); add(g, G.cyl, 0xffffff, [0, 0.075, 0], [0.065, 0.05, 0.065]); g.traverse(function (m) { m.frustumCulled = false; }); g.visible = false; return g; });
+    return R.acc.fg;
+  }
   function roomMood(dt) {
     const A = S.ai, p = S.prog;
     if (S.fake) return;
     if (!A.mood) A.mood = { name: 'nasty', t: 0, dur: 1.7 };
-    A.mood.t += dt; S.fakeT -= dt;
-    if (S.fakeT <= 0 && S.time > 4) { S.fake = { t: 0, hit: false }; S.fakeT = rand(13, 19); SFX.whoosh(); bubble.className = ''; S.sayT = 0; return; }
+    A.mood.t += dt;
+    if (S.fakeT <= 0 && S.time > 5) { S.fake = { t: 0, bz: 0, g: 0, wind: 0, punch: false, hit: false, said: false, lock: true }; S.fakeT = 1e9; fakeGloves(S.R); bubble.className = ''; S.sayT = 0; return; }   // 1分に1回だけ
     if (A.mood.t >= A.mood.dur) {
       const pool = p < 0.25 ? ['nasty', 'nasty', 'provoke', 'lie', 'angry'] : p < 0.6 ? ['nasty', 'provoke', 'lie', 'angry', 'irk', 'irk', 'sorry', 'cry'] : ['sorry', 'sorry', 'cry', 'cry', 'lie', 'provoke', 'angry', 'irk'];
       let n; do { n = pick(pool); } while (n === A.mood.name);
@@ -337,13 +346,32 @@ function main() {
     }
   }
   const _f0 = new THREE.Vector3(), _f1 = new THREE.Vector3();
-  function updateFake(rdt) {   // 向こうのこぶしが 画面いっぱいまで飛んできて、寸前で止まる
-    const f = S.fake; f.t += rdt;
-    const a = clamp(f.t / 0.28, 0, 1), back = clamp((f.t - 0.95) / 0.3, 0, 1), k = ease.in2(a) * (1 - ease.io(back));
-    _f0.set(0.3, LOOKY - 0.28, S.R.hr + 0.1); _f1.set(0, LOOKY - 0.01, camBase.z - 0.33);
-    fist.position.lerpVectors(_f0, _f1, k); fist.scale.setScalar(0.5 + 0.5 * k); fist.lookAt(camera.position); fist.visible = true;
-    if (!f.hit && a >= 1) { f.hit = true; S.shake = 2.4; S.flash = Math.max(S.flash, 0.25); big('うわっ!?', 'red'); SFX.thud(); vib([70]); }
-    if (f.t >= 1.3) { fist.visible = false; S.fake = null; S.ai.mood = { name: 'fake', t: 0, dur: 2.3 }; say(moodLine('fake'), 'taunt', 2.2); }
+  const T_BACK = 0.45, T_GUARD = 1.25, T_WIND = 1.4, T_HIT = 1.62, T_SAY = 1.7, T_RET = 1.8, T_FWD = 2.1, T_END = 2.6, BACK = -1.55;
+  const _sh = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
+  function updateFake(rdt) {   // 一歩下がって 構えて、画面からはみ出るパンチ →「いまの、ビビったでしょ?」
+    const f = S.fake, R = S.R, t = (f.t += rdt), fg = fakeGloves(R);
+    f.bz = t < T_BACK ? BACK * ease.out(t / T_BACK) : t < T_FWD ? BACK : BACK * (1 - ease.io(clamp((t - T_FWD) / (T_END - T_FWD), 0, 1)));
+    f.g = t < T_BACK ? ease.out(t / T_BACK) : t < T_FWD ? 1 : 1 - clamp((t - T_FWD) / (T_END - T_FWD), 0, 1);
+    f.wind = t > T_GUARD && t < T_WIND ? ease.out((t - T_GUARD) / (T_WIND - T_GUARD)) : 0;
+    fg[0].visible = fg[1].visible = f.g > 0.05;
+    if (t > 0.5 && !f.s1) { f.s1 = 1; SFX.whoosh(); say('いくわよ〜…', 'taunt', 0.75); }
+    if (t > 0.85 && !f.s2) { f.s2 = 1; SFX.whoosh(); }
+    // パンチ: 本物の手を かくして、のびる腕の先のグローブが こちらへ飛んでくる
+    const k = t < T_WIND ? 0 : t < T_HIT ? ease.in2((t - T_WIND) / (T_HIT - T_WIND)) : t < T_RET ? 1 : 1 - ease.io(clamp((t - T_RET) / (T_FWD - T_RET), 0, 1));
+    f.punch = k > 0.001; fg[1].visible = fg[1].visible && !f.punch;
+    if (f.punch) {
+      fg[1].getWorldPosition(_f0); _f1.set(0.04, LOOKY - 0.02, camBase.z - 0.36);
+      fist.position.lerpVectors(_f0, _f1, k); fist.scale.setScalar(0.9 + 0.5 * k);
+      fist.lookAt(camera.position); fist.rotateZ(-0.35 * k); fist.visible = true;
+      R.arms[1].sh.getWorldPosition(_sh); _f0.copy(fist.position).sub(_sh); const len = _f0.length();
+      fistArm.position.copy(_sh).addScaledVector(_f0, 0.5); fistArm.quaternion.setFromUnitVectors(_up, _f0.normalize()); fistArm.scale.set(0.045, len, 0.045); fistArm.visible = true;
+      if (!f.hit && t >= T_HIT) { f.hit = true; S.shake = 7; S.flash = 0.55; S.fovKick = -4; SFX.thud(); SFX.punch(true, 40); vib([90, 30, 60]); }
+    } else { fist.visible = false; fistArm.visible = false; }
+    if (!f.said && t >= T_SAY) { f.said = true; f.lock = false; big('いまの、\nビビったでしょ?', 'huge'); SFX.combo(1); }
+    if (t >= T_END) {
+      fist.visible = false; fistArm.visible = false; fg[0].visible = fg[1].visible = false; S.fake = null;
+      const A = S.ai; A.mood = { name: 'fake', t: 0, dur: 2.4 }; let ln = moodLine('fake'); if (/ビビったでしょ/.test(ln)) ln = moodLine('fake'); say(ln, 'taunt', 2.2);
+    }
   }
 
   /* ---------- 相手の動き ---------- */
@@ -476,6 +504,7 @@ function main() {
     bs.vx += (-200 * bs.x - 16 * bs.vx) * dt; bs.x += bs.vx * dt; bs.vz += (-130 * bs.z - 13 * bs.vz) * dt; bs.z += bs.vz * dt; bs.vy += (-160 * bs.y - 14 * bs.vy) * dt; bs.y += bs.vy * dt;
     hs.x = clamp(hs.x, -1.1, 0.9); hs.z = clamp(hs.z, -0.9, 0.9); hs.y = clamp(hs.y, -1.3, 1.3); bs.x = clamp(bs.x, -0.4, 0.7); bs.z = clamp(bs.z, -0.5, 0.2); bs.y = clamp(bs.y, -0.1, 0.4);
     R.wob *= Math.exp(-5 * dt); R.flail *= Math.exp(-5 * dt); R.ovKick *= Math.exp(-6 * dt); R.sq *= Math.exp(-13 * dt); R.hspin *= Math.exp(-7 * dt);
+    if (S.fake) ov.z += S.fake.bz;
     // 体に当てはめる
     R.body.visible = !(ov.hide || A.hidden);
     let x = P.x + ov.x, y = P.jump + ov.y + Math.max(0, bs.y), z = P.z + ov.z + bs.z;
@@ -494,13 +523,16 @@ function main() {
     for (let i = 0; i < 2; i++) { const a = R.arms[i], p = d.arms[i];
       let ux = lerp(p.ux, -2.5, fl * 0.85) + Math.sin(t * 28 + i * 2) * 0.5 * fl, uz = p.uz + fl * 0.7, fx = lerp(p.fx, -0.3, fl), fz = p.fz * (1 - fl);
       if (talk && i === 1) { ux = -1.25; uz = 0.15; fx = -1.2 + Math.sin(t * 16) * 0.35; fz = 0; }
+      if (S.fake) { const F = S.fake, gk = F.g, bob = Math.sin(F.t * 13 + i * PI) * 0.12 * gk;   // ボクシングの構え
+        ux = lerp(ux, -1.15 + bob, gk); uz = lerp(uz, 0.12, gk); fx = lerp(fx, -1.95, gk); fz = lerp(fz, -0.5, gk);
+        if (i === 1) { ux += 0.55 * F.wind; fx -= 0.35 * F.wind; if (F.punch) { ux = -1.5; uz = 0.12; fx = -0.15; fz = 0; } } }
       a.sh.rotation.set(ux, 0, a.s * uz); a.el.rotation.set(fx, 0, a.s * fz); }
     if (R.acc.dangle) for (let i = 0; i < R.acc.dangle.length; i++) R.acc.dangle[i].rotation.z = clamp(-hs.y * 1.6 - hs.z * 2 + Math.sin(t * 9 + i) * R.sq * 0.5, -1.4, 1.4);
     animSwell(R, dt);
     shadow.position.set(x, 0.012, clamp(z, -9, 1)); const ss = 0.42 * d.w / (1 + y * 0.7); shadow.scale.set(ss, ss * 0.6, 1); shadow.visible = R.body.visible && y < 5 && !S.room;
     // 顔
     const woozy = (S.gauge > d.tough * 0.86 && playing) || (S.sp && S.sp.t > 0.9);
-    let ex = A.mode === 'down' ? (ov.expr || 'dizzy') : A.hitT > 0 ? 'hit' : S.room ? (MOOD_EX[A.mood ? A.mood.name : 'nasty'] || 'idle') : (woozy && !d.happy) ? 'dizzy' : (A.smug > 0 || (d.happy && R.lv >= 3)) ? 'smug' : 'idle';
+    let ex = S.fake ? (S.fake.t < T_GUARD ? 'smug' : S.fake.t < T_RET ? 'angry' : 'hen') : A.mode === 'down' ? (ov.expr || 'dizzy') : A.hitT > 0 ? 'hit' : S.room ? (MOOD_EX[A.mood ? A.mood.name : 'nasty'] || 'idle') : (woozy && !d.happy) ? 'dizzy' : (A.smug > 0 || (d.happy && R.lv >= 3)) ? 'smug' : 'idle';
     if (ex !== A.expr) { A.expr = ex; R.curExpr = ex; R.faceMat.map = R.tex[ex]; }
     // ふきだし・星の輪の位置
     R.hc.getWorldPosition(_v); const hsr = scrR(_v, R.hr); S.headScr[0] = hsr[0]; S.headScr[1] = hsr[1]; S.headScr[2] = hsr[2];
@@ -572,7 +604,7 @@ function main() {
   function startGame(i) {
     loadChar(i);
     const d = CHARS[i];
-    S.time = CFG.TIME; S.hits = 0; S.combo = 0; S.maxCombo = 0; S.downs = 0; S.gauge = 0; S.heads = 0; S.bodies = 0; S.slow = 0; S.hitstop = 0; S.lastHit = 9; S.sp = null; S.spCD = 8; S.spCount = 0; S.prog = 0; S.time0 = CFG.TIME; S.fake = null; S.fakeT = rand(8, 12); fist.visible = false;
+    S.time = CFG.TIME; S.hits = 0; S.combo = 0; S.maxCombo = 0; S.downs = 0; S.gauge = 0; S.heads = 0; S.bodies = 0; S.slow = 0; S.hitstop = 0; S.lastHit = 9; S.sp = null; S.spCD = 8; S.spCount = 0; S.prog = 0; S.time0 = CFG.TIME; S.fake = null; S.fakeT = rand(12, 46); fist.visible = false; fistArm.visible = false; if (S.R && S.R.acc.fg) S.R.acc.fg.forEach(function (o) { o.visible = false; });
     S.cmtN = CHARS[i].chatty ? 3 : 10; spEl.className = ''; sukiEl.className = ''; gloveMat.color.set(0xe21f26); gloveMat2.color.set(0xc5161d);
     const tm = /[#&]t=(\d+)/.exec(HASH); if (tm) S.time = +tm[1]; S.time0 = S.time;
     const lm = /[#&]lv=(\d)/.exec(HASH); if (lm && +lm[1]) applyProg(LV_AT[+lm[1] - 1] + 0.01, false);
@@ -599,7 +631,7 @@ function main() {
     if (isNew) SFX.cheer();
   }
   function toSelect() {
-    S.fake = null; fist.visible = false;
+    S.fake = null; fist.visible = false; fistArm.visible = false;
     S.state = 'select'; SFX.bgm(false); bubble.className = ''; sukiEl.className = ''; spEl.className = ''; S.sp = null;
     show('hud', false); show('result', false); show('pause', false); show('ready', false); show('hint', false); show('select', true);
     buildGrid(); if (S.R) resetFoe();
@@ -656,13 +688,13 @@ function main() {
       if (S.slow > 0) { S.slow -= rdt; ts = 0.3; }
       if (S.state === 'finish') { ts = 0.25; S.finT -= rdt; if (S.finT <= 0) showResult(); }
       if (S.sp) { updateSpecial(rdt); if (S.sp && S.sp.t < 0.9) ts = 0.04; }
-      if (S.fake) { if (S.state === 'play') updateFake(rdt); else { S.fake = null; fist.visible = false; } }
+      if (S.fake) { if (S.state === 'play') updateFake(rdt); else { S.fake = null; fist.visible = false; fistArm.visible = false; } }
       let dt = rdt * ts;
       if (S.hitstop > 0) { S.hitstop -= rdt; dt = 0; }
       S.T += dt;
-      if (S.state === 'ready') { S.readyT += rdt; if (S.readyT > 0.8 && $('readyTxt').textContent !== 'FIGHT!') { $('readyTxt').textContent = S.room ? 'なぐれ〜!' : 'FIGHT!'; SFX.bell(1); } if (S.readyT > 1.25) { S.state = 'play'; show('ready', false); if (S.plays === 0 && !AUTO) { $('hint').textContent = S.room ? 'どこでもいいから 連打!' : '相手をタップして殴れ!'; show('hint', true); setTimeout(function () { show('hint', false); }, 2600); } if (/down/.test(HASH)) { S.gauge = 9999; startDown(); } if (/[#&]sp/.test(HASH)) startSpecial(); } }
+      if (S.state === 'ready') { S.readyT += rdt; if (S.readyT > 0.8 && $('readyTxt').textContent !== 'FIGHT!') { $('readyTxt').textContent = S.room ? 'なぐれ〜!' : 'FIGHT!'; SFX.bell(1); } if (S.readyT > 1.25) { S.state = 'play'; show('ready', false); if (S.plays === 0 && !AUTO) { $('hint').textContent = S.room ? 'どこでもいいから 連打!' : '相手をタップして殴れ!'; show('hint', true); setTimeout(function () { show('hint', false); }, 2600); } if (/down/.test(HASH)) { S.gauge = 9999; startDown(); } if (/[#&]sp/.test(HASH)) startSpecial(); if (/[#&]fk/.test(HASH)) S.fakeT = 0.6; } }
       if (S.state === 'play') {
-        const pt = S.time; if (!S.sp) S.time -= rdt; S.comboT -= dt; S.lastHit += dt; S.spCD -= rdt;
+        const pt = S.time; if (!S.sp) S.time -= rdt; if (S.room && !S.fake) S.fakeT -= rdt;   // 殴るふりは 本物の時計で数える(1分のどこかで 必ず1回) S.comboT -= dt; S.lastHit += dt; S.spCD -= rdt;
         if (S.comboT <= 0 && S.combo) { S.combo = 0; $('combo').className = 'stroke'; }
         if (S.lastHit > 2 && S.gauge > 0 && S.ai.mode !== 'down') S.gauge = Math.max(0, S.gauge - 14 * dt);
         if (S.time <= 5 && Math.ceil(S.time) !== Math.ceil(pt) && S.time > 0) SFX.beep(false);
@@ -676,7 +708,7 @@ function main() {
       // カメラ(ゆれ・寄り・相手を少し目で追う = 立体感)
       S.shake *= Math.exp(-10 * rdt); S.fovKick *= Math.exp(-9 * rdt);
       camKick.vx += (-90 * camKick.x - 12 * camKick.vx) * rdt; camKick.x = clamp(camKick.x + camKick.vx * rdt, -0.3, 0.3);
-      const sk = S.room ? 0.35 : 1, fx = S.R && !S.room ? clamp(S.R.body.position.x, -1.5, 1.5) : 0;
+      const sk = S.room ? (S.fake ? 0.9 : 0.35) : 1, fx = S.R && !S.room ? clamp(S.R.body.position.x, -1.5, 1.5) : 0;
       camera.position.set(camBase.x + (Math.random() - 0.5) * S.shake * 0.07 * sk + camKick.x * sk + (S.room ? Math.sin(S.T * 0.7) * 0.035 : fx * 0.1), camBase.y + (Math.random() - 0.5) * S.shake * 0.07 * sk + Math.sin(S.T * 1.1) * 0.006, camBase.z);
       camera.fov = baseFov - S.fovKick * (S.room ? 0.6 : 1); camera.updateProjectionMatrix(); camera.lookAt(fx * 0.22, LOOKY, 0);
       if (S.flash > 0.005) { S.flash *= Math.exp(-14 * rdt); $('flash').style.opacity = S.flash.toFixed(3); } else if (S.flash) { S.flash = 0; $('flash').style.opacity = '0'; }
