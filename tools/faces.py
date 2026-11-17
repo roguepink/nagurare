@@ -5,11 +5,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from playtest import NoCache, ROOT, CHROME
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--lv", default="0,3,6"); ap.add_argument("--out", default="_check/faces"); ap.add_argument("--only", default=""); ap.add_argument("--prog", default="")
+    ap = argparse.ArgumentParser(); ap.add_argument("--lv", default="0,3,6"); ap.add_argument("--out", default="_check/faces"); ap.add_argument("--only", default=""); ap.add_argument("--prog", default=""); ap.add_argument("--cell", type=int, default=300)
     a = ap.parse_args()
     from playwright.sync_api import sync_playwright
     from PIL import Image
-    ids = [int(x) for x in a.only.split(",")] if a.only else list(range(1, 11)); lvs = [float(x) for x in a.prog.split(",")] if a.prog else [int(x) for x in a.lv.split(",")]; C = 300; errs = []
+    ids = [int(x) for x in a.only.split(",")] if a.only else list(range(1, 11)); C = a.cell; lvs = [float(x) for x in a.prog.split(",")] if a.prog else [int(x) for x in a.lv.split(",")]; errs = []
     sheet = Image.new("RGB", (C * len(ids), C * len(lvs)), "#222")
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer(("127.0.0.1", 0), functools.partial(NoCache, directory=str(ROOT))) as srv:
