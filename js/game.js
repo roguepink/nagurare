@@ -271,7 +271,7 @@ function main() {
       if (S.gauge >= d.tough) startDown();
     } else if (A.mode === 'down') R.ovKick = 1;
     // セリフ(何発か殴るごとに1回・毎回ちがう)
-    if (!special && !S.room && A.mode !== 'down' && --S.cmtN <= 0 && S.sayT <= 0.3) { S.cmtN = S.room ? 8 + Math.floor(Math.random() * 5) : 11 + Math.floor(Math.random() * 7); say(nextLine('ouch'), S.room ? 'cute' : 'ouch'); }
+    if (!special && !S.room && A.mode !== 'down' && --S.cmtN <= 0 && S.sayT <= 0.3) { S.cmtN = d.chatty ? 4 + Math.floor(Math.random() * 4) : 11 + Math.floor(Math.random() * 7); say(nextLine('ouch'), 'ouch', d.chatty ? 1.5 : 1.9); }
     const hEl = $('hits'); hEl.firstChild.nodeValue = String(S.hits); hEl.classList.remove('bump'); void hEl.offsetWidth; hEl.classList.add('bump');
     const cEl = $('combo');
     if (S.combo >= 3) { cEl.innerHTML = '<b>' + S.combo + '</b><span>コンボ</span>'; cEl.className = 'stroke on c' + Math.min(4, Math.floor(S.combo / 15)); cEl.style.fontSize = (1 + Math.min(S.combo, 60) / 200).toFixed(2) + 'em'; void cEl.offsetWidth; cEl.classList.add('bump'); }
@@ -392,9 +392,9 @@ function main() {
   }
   function taunt() {
     const A = S.ai, d = S.R.def;
-    say(nextLine('lines'), 'taunt'); A.smug = 1.7; A.tauntT = d.ai.nag ? rand(3.5, 5.5) : rand(5.5, 8.5);
+    say(nextLine('lines'), 'taunt', d.chatty ? 1.7 : 1.9); A.smug = 1.7; A.tauntT = d.chatty ? rand(1.4, 2.6) : d.ai.nag ? rand(3.5, 5.5) : rand(5.5, 8.5);
     // しゃべっている間は「スキ」。たまにだけ 必殺のチャンスになる
-    if (!S.room && S.spCD <= 0 && S.time < CFG.TIME - 6 && S.time > 5 && Math.random() < (d.boss ? 0.2 : 0.11)) { A.open = { t: 1.25, ok: true }; sukiEl.className = 'on'; SFX.twinkle(); }
+    if (!S.room && S.spCD <= 0 && S.time < CFG.TIME - 6 && S.time > 5 && Math.random() < (d.chatty ? 0.07 : d.boss ? 0.2 : 0.11)) { A.open = { t: 1.25, ok: true }; sukiEl.className = 'on'; SFX.twinkle(); }
   }
   function startDodge(pend) {
     const R = S.R, ai = R.def.ai, A = S.ai, P = R.P, type = pick(ai.moves);
@@ -573,7 +573,7 @@ function main() {
     loadChar(i);
     const d = CHARS[i];
     S.time = CFG.TIME; S.hits = 0; S.combo = 0; S.maxCombo = 0; S.downs = 0; S.gauge = 0; S.heads = 0; S.bodies = 0; S.slow = 0; S.hitstop = 0; S.lastHit = 9; S.sp = null; S.spCD = 8; S.spCount = 0; S.prog = 0; S.time0 = CFG.TIME; S.fake = null; S.fakeT = rand(8, 12); fist.visible = false;
-    S.cmtN = S.room ? 6 : 10; spEl.className = ''; sukiEl.className = ''; gloveMat.color.set(0xe21f26); gloveMat2.color.set(0xc5161d);
+    S.cmtN = CHARS[i].chatty ? 3 : 10; spEl.className = ''; sukiEl.className = ''; gloveMat.color.set(0xe21f26); gloveMat2.color.set(0xc5161d);
     const tm = /[#&]t=(\d+)/.exec(HASH); if (tm) S.time = +tm[1]; S.time0 = S.time;
     const lm = /[#&]lv=(\d)/.exec(HASH); if (lm && +lm[1]) applyProg(LV_AT[+lm[1] - 1] + 0.01, false);
     $('hits').firstChild.nodeValue = '0'; $('combo').className = 'stroke'; $('foeName').textContent = d.room ? 'なぐりたい放題' : d.name; show('gaugeWrap', !d.room);
